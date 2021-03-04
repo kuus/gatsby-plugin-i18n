@@ -1,0 +1,44 @@
+{
+  "name": "@kuus/gatsby-plugin-i18n",
+  "version": "0.0.1",
+  "description": "",
+  "author": "kuus <kunderiluus@gmail.com> (http://kunderikuus.net)",
+  "license": "MIT",
+  "keywords": [
+    "gatsby",
+    "gatsby-plugin",
+    "i18n",
+    "internationalisation",
+    "localisation",
+    "locale",
+    "translation"
+  ],
+  "scripts": {
+    "prepublishOnly": "npm run format",
+    "_postpublish": "PACKAGE_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]') && git tag $PACKAGE_VERSION && git push --tags",
+    "build": "npx babel src --out-dir . --ignore __tests__",
+    "start": "npx babel -w src --out-dir . --ignore __tests__",
+    "format": "npx prettier --write src/**/*.{js,jsx}",
+    "clean": "rm *.js"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "@babel/runtime": "^7.13.9",
+    "@formatjs/intl-pluralrules": "^4.0.11",
+    "@formatjs/intl-relativetimeformat": "^8.1.2",
+    "browser-lang": "^0.1.0",
+    "intl": "^1.2.5",
+    "react-intl": "^5.13.2"
+  },
+  "peerDependencies": {
+    "gatsby": "^3.0.1",
+    "react": "^17.0.1",
+    "react-helmet": "^6.1.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.13.0",
+    "@babel/core": "^7.13.8",
+    "babel-preset-gatsby-package": "^1.0.0",
+    "prettier": "^2.2.1"
+  }
+}

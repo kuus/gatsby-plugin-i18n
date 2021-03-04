@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    ["@babel/plugin-transform-modules-commonjs", {
+      "strictMode": false
+    }]
+  ],
+  "presets": [
+    ["babel-preset-gatsby-package", { "browser": true }]
+  ]
+}
