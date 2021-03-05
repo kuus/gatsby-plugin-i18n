@@ -1,14 +1,17 @@
 import React from "react";
 import { Link as GatsbyLink, navigate as gatsbyNavigate } from "gatsby";
 import { IntlContextConsumer } from "./IntlContext";
-import { findRouteForPath } from "./utils";
+import { findRouteForPath, normaliseSlashes } from "./utils";
 import i18nRoutes from "./.routes.json";
 
-const getDestination = ({ i18n, to, language }) => {
+const getDestination = ({ i18n, to, locale }) => {
   // console.log("getDestination: i18nRoutes", i18nRoutes, "while i18n is", i18n);
-  const route = i18nRoutes[to];
-  const lang = language || i18n.currentLanguage;
-  const localisedTo = route ? route[lang] || route[i18n.defaultLanguage] : to;
+  // normalising here allows us to write links such as "pages/about" instead of
+  // "/pages/about/" and still match the route key in the `.routes.json` (which
+  // corresponds to the markdown file relative path)
+  const route = i18nRoutes[normaliseSlashes(to)];
+  locale = locale || i18n.currentLocale;
+  const localisedTo = route ? route[locale] || route[i18n.defaultLocale] : to;
 
   if (typeof window === "undefined") {
     return localisedTo;
@@ -18,15 +21,15 @@ const getDestination = ({ i18n, to, language }) => {
 };
 
 const Link = React.forwardRef(
-  ({ to, params, language, children, onClick, ...restProps }, ref) => (
-    // const Link = ({ to, language, children, onClick, ...restProps }) => (
+  ({ to, params, locale, children, onClick, ...restProps }, ref) => (
+    // const Link = ({ to, locale, children, onClick, ...restProps }) => (
     <IntlContextConsumer>
       {(i18n) => {
-        let destination = getDestination({ i18n, to, language });
-        const lang = language || i18n.currentLanguage;
+        let destination = getDestination({ i18n, to, locale });
+        locale = locale || i18n.currentLocale;
         const handleClick = (e) => {
-          if (lang) {
-            localStorage.setItem("gatsby-i18n-language", lang);
+          if (locale) {
+            localStorage.setItem("gatsby-i18n-locale", locale);
           }
           if (onClick) {
             onClick(e);
@@ -72,7 +75,7 @@ export const navigate = (to, options) => {
   gatsbyNavigate(destination, options);
 };
 
-export const changeLocale = (language, to) => {
+export const changeLocale = (locale, to) => {
   if (typeof window === "undefined") {
     return;
   }
@@ -80,13 +83,13 @@ export const changeLocale = (language, to) => {
   const destination = getDestination({
     i18n: window.___gatsbyI18n,
     to,
-    language,
+    locale,
   });
-  localStorage.setItem("gatsby-i18n-language", language);
+  localStorage.setItem("gatsby-i18n-locale", locale);
   gatsbyNavigate(destination);
 };
 
-export const getCurrentRoute = (location, language) => {
+export const getCurrentRoute = (location, locale) => {
   if (typeof window === "undefined") {
     return;
   }
@@ -95,9 +98,9 @@ export const getCurrentRoute = (location, language) => {
   const matchedRoute = findRouteForPath(routes, location.pathname);
 
   if (matchedRoute) {
-    return matchedRoute[language] || `/${language}/404`;
+    return matchedRoute[locale] || `/${locale}/404`;
   }
-  return `/${language}/404`;
+  return `/${locale}/404`;
 };
 
 export default Link;

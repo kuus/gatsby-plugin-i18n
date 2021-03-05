@@ -8,8 +8,8 @@ import Helmet from "react-helmet";
 import { findRouteForPath } from "./utils";
 import i18nRoutes from "./.routes.json";
 
-const polyfillIntl = (language) => {
-  const locale = language.split("-")[0];
+const polyfillIntl = (locale) => {
+  locale = locale.split("-")[0];
   // try {
   //   if (!Intl.PluralRules) {
   //     require("@formatjs/intl-pluralrules/polyfill");
@@ -21,16 +21,17 @@ const polyfillIntl = (language) => {
   //     require(`@formatjs/intl-relativetimeformat/dist/locale-data/${locale}`);
   //   }
   // } catch (e) {
-  //   throw new Error(`Cannot find react-intl/locale-data/${language}`);
+  //   throw new Error(`Cannot find react-intl/locale-data/${locale}`);
   // }
 };
 
 const withIntlProvider = (i18n) => (children) => {
-  polyfillIntl(i18n.currentLanguage);
+  polyfillIntl(i18n.currentLocale);
+
   return (
     <IntlProvider
-      locale={i18n.currentLanguage}
-      defaultLocale={i18n.defaultLanguage}
+      locale={i18n.currentLocale}
+      defaultLocale={i18n.defaultLocale}
       messages={i18n.messages}
     >
       <IntlContextProvider value={i18n}>{children}</IntlContextProvider>
@@ -39,20 +40,20 @@ const withIntlProvider = (i18n) => (children) => {
 };
 
 /**
- * Get current language from URL pathname
+ * Get current locale from URL pathname
  *
  * it grabs the first bit of the pathname and check that that is one of the
- * available languages
+ * available locales
  *
  * @param {string} pathname
- * @param {string[]} languages
+ * @param {string[]} locales
  * @returns {string | false}
  */
-function getCurrentLangFromURL(pathname, languages) {
+function getCurrentLocaleFromURL(pathname, locales) {
   const parts = pathname.split("/");
   if (parts[1]) {
-    for (let i = 0; i < languages.length; i++) {
-      if (languages[i] === parts[1]) {
+    for (let i = 0; i < locales.length; i++) {
+      if (locales[i] === parts[1]) {
         return parts[1];
       }
     }
@@ -66,7 +67,7 @@ function getCurrentLangFromURL(pathname, languages) {
  *
  * The canonical link tag is oly be added on the non-canonical url,
  * the one the duplicates the original one, for instance, having a default
- * language set to "it" and having these two URLS:
+ * locale set to "it" and having these two URLS:
  * "https://mysite.com/it/chi-siamo"
  * "https://mysite.com/chi-siamo"
  * the first one is considered the canonical URL, hence in the latter URL we
@@ -77,28 +78,30 @@ function getCurrentLangFromURL(pathname, languages) {
  * @see https://support.google.com/webmasters/answer/189077
  */
 const I18nSEO = ({ i18n, location, options }) => {
-  const { currentLanguage, defaultLanguage, languages } = i18n;
+  const { currentLocale, defaultLocale, locales } = i18n;
   const route = findRouteForPath(i18nRoutes, location.pathname);
   const baseUrl = options.baseUrl;
-  const currentLangInUrl = getCurrentLangFromURL(location.pathname, languages);
+  const currentLocaleInUrl = getCurrentLocaleFromURL(
+    location.pathname,
+    locales
+  );
 
   if (!route) {
-    return <Helmet htmlAttributes={{ lang: currentLanguage }} />;
+    return <Helmet htmlAttributes={{ lang: currentLocale }} />;
   }
-  const canonicalUrl = baseUrl + route[defaultLanguage];
-  const showCanonical =
-    currentLanguage === defaultLanguage || !currentLangInUrl;
+  const canonicalUrl = baseUrl + route[defaultLocale];
+  const showCanonical = currentLocale === defaultLocale || !currentLocaleInUrl;
 
   return (
-    <Helmet htmlAttributes={{ lang: currentLanguage }}>
+    <Helmet htmlAttributes={{ lang: currentLocale }}>
       {showCanonical && <link rel="canonical" href={canonicalUrl} />}
-      {languages.map((lang) =>
-        !!route[lang] ? (
+      {locales.map((locale) =>
+        !!route[locale] ? (
           <link
             rel="alternate"
-            href={baseUrl + route[lang]}
-            hrefLang={lang}
-            key={lang}
+            href={baseUrl + route[locale]}
+            hrefLang={locale}
+            key={locale}
           />
         ) : (
           ""
@@ -121,7 +124,7 @@ const WrapPageElement = ({ element, props }, pluginOptions) => {
     return element;
   }
 
-  const { currentLanguage, languages, redirect, routed } = i18n;
+  const { currentLocale, locales, redirect, routed } = i18n;
 
   const isRedirect = redirect && !routed;
 
@@ -131,27 +134,27 @@ const WrapPageElement = ({ element, props }, pluginOptions) => {
 
     // Skip build, Browsers only
     if (typeof window !== "undefined") {
-      let detectedLanguage =
-        window.localStorage.getItem("gatsby-i18n-language") ||
+      let detectedLocale =
+        window.localStorage.getItem("gatsby-i18n-locale") ||
         browserLang({
-          languages,
-          fallback: currentLanguage,
+          locales,
+          fallback: currentLocale,
         });
 
-      if (!languages.includes(detectedLanguage)) {
-        detectedLanguage = currentLanguage;
+      if (!locales.includes(detectedLocale)) {
+        detectedLocale = currentLocale;
       }
 
       const queryParams = search || "";
       const route = findRouteForPath(i18nRoutes, pathname);
-      const routeLink = route ? route[detectedLanguage] : null;
+      const routeLink = route ? route[detectedLocale] : null;
       let newUrl = "";
       if (routeLink) {
-        newUrl = routeLink || `/${detectedLanguage}${pathname}`;
+        newUrl = routeLink || `/${detectedLocale}${pathname}`;
       }
 
       newUrl = withPrefix(`/${newUrl}${queryParams}`);
-      window.localStorage.setItem("gatsby-i18n-language", detectedLanguage);
+      window.localStorage.setItem("gatsby-i18n-locale", detectedLocale);
       window.location.replace(newUrl);
     }
   }

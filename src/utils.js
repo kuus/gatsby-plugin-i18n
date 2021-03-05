@@ -5,12 +5,12 @@
  * The reason for the trailing slash is explained in the README,
  * @see https://github.com/gatsbyjs/gatsby/issues/9207
  *
- * @param {string} url
+ * @param {string} input
  * @returns {string}
  */
-const normaliseSlashes = (url) => {
-  url = url.replace(/\/+\//g, "/") + "/";
-  return `/${url.replace(/^\/+/, "").replace(/\/+$/, "/")}`;
+const normaliseSlashes = (input) => {
+  input = input.replace(/\/+\//g, "/") + "/";
+  return `/${input.replace(/^\/+/, "").replace(/\/+$/, "/")}`;
 };
 
 /**
@@ -23,11 +23,11 @@ const findRouteForPath = (routes, path) => {
   const normalisedPath = normaliseSlashes(path);
   for (const routeKey in routes) {
     const route = routes[routeKey];
-    for (const routeLang in route) {
+    for (const routeLocale in route) {
       if (
         routeKey === normalisedPath ||
-        route[routeLang] === normalisedPath ||
-        route[routeLang].replace(`/${routeLang}`, "") === normalisedPath
+        route[routeLocale] === normalisedPath ||
+        route[routeLocale].replace(`/${routeLocale}`, "") === normalisedPath
       ) {
         return route;
       }

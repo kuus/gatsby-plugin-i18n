@@ -15,7 +15,7 @@ const {
 const onCreatePage = ({ page, actions }, pluginOptions) => {
   const { createPage, deletePage } = actions;
   const options = getOptions(pluginOptions);
-  const { languages, templateName } = options;
+  const { locales, templateName } = options;
   const oldPage = { ...page };
   const templateBasename = getTemplateBasename(templateName);
 
@@ -29,17 +29,17 @@ const onCreatePage = ({ page, actions }, pluginOptions) => {
     // console.log(`"onCreatePage" matched 404.html: ${page.path}`);
     deletePage(oldPage);
     createPage(getPage(options, page, null, "404.html", "404.html"));
-    languages.forEach((lang) => {
-      // FIXME: last argument`matchPath` should be "*" ?
-      createPage(getPage(options, page, lang, "404.html"));
-    });
+    // locales.forEach((locale) => {
+    //   // FIXME: last argument`matchPath` should be "*" ?
+    //   createPage(getPage(options, page, locale, "404.html"));
+    // });
   } else if (page.path === "/404/") {
     // console.log(`"onCreatePage" matched 404: ${page.path}`);
     deletePage(oldPage);
     createPage(getPage(options, page, null, "404", "404"));
-    languages.forEach((lang) => {
+    locales.forEach((locale) => {
       // FIXME: last argument`matchPath` should be "*" ?
-      createPage(getPage(options, page, lang, "404"));
+      createPage(getPage(options, page, locale, "404"));
     });
   } else {
     // add routes only for pages that loosely placed as `.js/.tsx` files in
@@ -47,7 +47,7 @@ const onCreatePage = ({ page, actions }, pluginOptions) => {
     // urls keeping the same slug as the file name (which is what Gatsby uses
     // by default) and the localisation is delegated to the project creator who
     // should use the injectIntl HOC and define the translations in the
-    // `src/data/locale/$lang.json` files.
+    // `src/data/locale/$locale.json` files.
     // For the pages not created this way but instead programmatically created
     // in the `createPages` of your project you need instead to manually
     // create the route object and add it through `gatsby-i18n` API `addRoutes`.
@@ -60,31 +60,31 @@ const onCreatePage = ({ page, actions }, pluginOptions) => {
     //   deletePage(oldPage);
     //   createPage(getPage(options, page, null, page.path));
     //   let route = {};
-    //   languages.forEach(lang => {
+    //   locales.forEach(locale => {
     //     const routeKey = normaliseSlashes(`/${page.path}`);
     //     route[routeKey] = route[routeKey] || {};
-    //     route[routeKey][lang] = normaliseSlashes(`/${lang}/${page.path}`);
-    //     createPage(getPage(options, page, lang, page.path));
+    //     route[routeKey][locale] = normaliseSlashes(`/${locale}/${page.path}`);
+    //     createPage(getPage(options, page, locale, page.path));
     //   });
     //   addRoutes(route);
     // }
   }
 };
 
-const getPage = (options, page, lang, path, matchPath) => {
+const getPage = (options, page, locale, path, matchPath) => {
   const hasWildcard = matchPath ? matchPath.indexOf("*") >= 0 : false;
   const data = {
     ...page,
     context: {
       ...page.context,
-      ...getPageContextData({ lang, routed: !!lang }),
+      ...getPageContextData({ options, locale, routed: !!locale }),
     },
   };
-  path = lang ? `/${lang}/${path}` : `/${path}`;
+  path = locale ? `/${locale}/${path}` : `/${path}`;
   data.path = normaliseSlashes(path);
 
   if (matchPath) {
-    matchPath = lang ? `/${lang}/${matchPath}` : `/${matchPath}`;
+    matchPath = locale ? `/${locale}/${matchPath}` : `/${matchPath}`;
     // don't add trailing slash to 404 wildcard match path, otherwise we would
     // have the following matchPath value: `/en/*/`
     matchPath = hasWildcard ? matchPath : normaliseSlashes(matchPath);

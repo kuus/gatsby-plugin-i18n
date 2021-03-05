@@ -4,6 +4,7 @@ const {
   extractFromPath,
   normaliseSlashes,
   isFileToLocalise,
+  logger,
 } = require("./utils-plugin");
 
 const onCreateNode = ({ node, actions }, pluginOptions) => {
@@ -34,27 +35,31 @@ const onCreateNode = ({ node, actions }, pluginOptions) => {
   if (!isFileToLocalise(options, fileAbsolutePath)) return;
 
   const { createNodeField } = actions;
-  let { slug, lang, route, fileDir } = extractFromPath({
+  let { slug, locale, route, fileDir } = extractFromPath({
     options,
     fileAbsolutePath,
   });
 
   // slug can be overriden in each single markdown file
-  if (node.frontmatter && node.frontmatter.url) {
-    slug = node.frontmatter.url;
+  if (
+    node.frontmatter &&
+    node.frontmatter[options.frontmatterKeyForLocalisedSlug]
+  ) {
+    slug = node.frontmatter[options.frontmatterKeyForLocalisedSlug];
   }
 
   slug = normaliseSlashes(slug);
   route = normaliseSlashes(route);
 
-  createNodeField({ node, name: "lang", value: lang });
+  createNodeField({ node, name: "locale", value: locale });
   createNodeField({ node, name: "route", value: route });
   createNodeField({ node, name: "slug", value: slug });
   createNodeField({ node, name: "fileDir", value: fileDir });
 
   if (options.debug) {
-    console.log(
-      `[gatsby-i18n] lang:${lang}; route:${route}; slug:${slug}; fileDir:${fileDir};`
+    logger(
+      "info",
+      `locale:${locale}; route:${route}; slug:${slug}; fileDir:${fileDir};`
     );
   }
 };

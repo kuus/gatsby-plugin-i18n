@@ -49,23 +49,28 @@ const getPageComponent = ({ options, node }) => {
 };
 
 const createPages = async ({ graphql, actions }, pluginOptions) => {
+  const { createPage, createRedirect } = actions;
   const options = getOptions(pluginOptions);
-  const { createPage } = actions;
+  const {
+    enforceLocalisedUrls,
+    hideDefaultLocaleInUrl,
+    pathContent,
+    templateName,
+  } = options;
+
   let rightContentPath = "";
-  if (Array.isArray(options.pathContent)) {
-    rightContentPath = `(${options.pathContent.join("|")})`;
+  if (Array.isArray(pathContent)) {
+    rightContentPath = `(${pathContent.join("|")})`;
   } else {
-    rightContentPath = options.pathContent;
+    rightContentPath = pathContent;
   }
 
-  // name: {nin: ["${getTemplateBasename(options.templateName)}", "404"]}
-  // name: {ne: "${getTemplateBasename(options.templateName)}"}
   const result = await graphql(`
     query {
       allFile(filter: {
         absolutePath: {regex: "${new RegExp(rightContentPath)}"},
         ext: {in: [".js", ".jsx", ".ts", ".tsx"]},
-        name: {nin: ["${getTemplateBasename(options.templateName)}", "404"]}
+        name: {nin: ["${getTemplateBasename(templateName)}", "404"]}
       }) {
         edges {
           node {
@@ -73,7 +78,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
             relativePath
             fields {
               slug
-              lang
+              locale
               fileDir
               route
             }
@@ -86,7 +91,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
             id
             fields {
               slug
-              lang
+              locale
               fileDir
               route
             }
@@ -105,51 +110,59 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   const markdownPages = result.data.allMarkdown.edges;
   const allPages = markdownPages.concat(filePages);
   const routes = {};
-  const { languages, defaultLanguage, untranslatedComponent } = options;
 
   // build routes map
   allPages.forEach((edge) => {
-    const { slug, lang, route } = edge.node.fields;
-    // console.log(`slug: ${slug}, lang: ${lang}, route: ${route}`);
+    const { slug, locale, route } = edge.node.fields;
+    // console.log(`slug: ${slug}, locale: ${locale}, route: ${route}`);
     routes[route] = routes[route] || {};
-    routes[route][lang] = normaliseSlashes(`/${lang}/${slug}`);
+    routes[route][locale] = normaliseSlashes(`/${locale}/${slug}`);
   });
 
   // add 404 localised routes
-  languages.forEach((lang) => {
+  options.locales.forEach((locale) => {
     const path = normaliseSlashes("/404");
     routes[path] = routes[path] || {};
-    routes[path][lang] = normaliseSlashes(`/${lang}/404`);
+    routes[path][locale] = normaliseSlashes(`/${locale}/404`);
   });
 
   // add fallback page for untraslated routes
-  if (untranslatedComponent) {
+  if (options.untranslatedComponent) {
     for (const route in routes) {
       const routeData = routes[route];
-      const routeLanguages = Object.keys(routeData);
+      const routelocales = Object.keys(routeData);
 
-      if (routeLanguages.length < languages.length) {
-        languages.forEach((lang) => {
+      // if the translated versions are less then the default set of locales
+      // create some untranslated pages
+      if (routelocales.length < options.locales.length) {
+        options.locales.forEach((locale) => {
           // bail if the route is already there
-          if (routeData[lang]) return;
+          if (routeData[locale]) return;
 
-          const context = { route, lang };
+          const context = { route, locale };
           // create path and add the "untranslated" route to the route map too
-          const path = normaliseSlashes(`${lang}/${route}`);
-          routes[route][lang] = path;
+          const routeDefaultPath = routeData[options.defaultLocale];
+          // if it ixists use the route's path assigned to the default locale,
+          // otheriwse use as path the route key preceded by the current locale
+          let path = routeDefaultPath
+            ? routeDefaultPath.replace(options.defaultLocale, locale)
+            : `${locale}/${route}`;
+          // then normalises the URL slashes
+          path = normaliseSlashes(path);
+          routes[route][locale] = path;
 
           // create page for untranslated content
           createPage({
             path: path,
-            component: untranslatedComponent,
+            component: options.untranslatedComponent,
             context: {
               ...context,
               ...getPageContextData(
-                { lang, routed: true },
+                { options, locale, routed: true },
                 {
-                  availableIn: routeLanguages.map((lang) => ({
-                    lang,
-                    to: routes[route][lang],
+                  availableIn: routelocales.map((locale) => ({
+                    locale,
+                    to: routes[route][locale],
                   })),
                 }
               ),
@@ -164,40 +177,59 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   markdownPages.forEach(({ node }) => {
     const {
       id,
-      fields: { route, slug, lang },
+      fields: { route, slug, locale },
     } = node;
-    let path = normaliseSlashes(`/${lang}/${slug}`);
+    let path = normaliseSlashes(`/${locale}/${slug}`);
     const component = getPageComponent({ options, node });
-    const context = { id, route, slug, lang };
+    const context = { id, route, slug, locale };
 
     if (options.debug) {
-      console.log(
-        `[gatsby-i18n] createPages: create md pages for path: ${path}, with slug: ${slug}`
+      logger(
+        "info",
+        `createPages: create md pages for path: ${path}, with slug: ${slug}`
       );
     }
 
     // create page with localised URL
-    createPage({
-      path: path,
-      component,
-      context: {
-        ...context,
-        ...getPageContextData({ lang, routed: true }),
-      },
-    });
-
-    // create same page without lang slug in URL for default language
-    // TODO: maybe instead of this create Netlify `_redirects` file automatically
-    if (lang === defaultLanguage) {
-      path = normaliseSlashes(slug.replace(`/${defaultLanguage}`, ""));
+    if (
+      locale !== options.defaultLocale ||
+      (locale == options.defaultLocale && enforceLocalisedUrls)
+    ) {
       createPage({
         path: path,
         component,
         context: {
           ...context,
-          ...getPageContextData({ lang, routed: false }),
+          ...getPageContextData({ options, locale, routed: true }),
         },
       });
+    }
+
+    // create same page without locale slug in URL for default locale
+    // if declared options
+    // TODO: maybe instead of this create Netlify `_redirects` file automatically
+    if (locale === options.defaultLocale) {
+      const pathWithoutLocale = normaliseSlashes(
+        slug.replace(`/${options.defaultLocale}`, "")
+      );
+
+      if (!enforceLocalisedUrls && hideDefaultLocaleInUrl) {
+        createPage({
+          path: pathWithoutLocale,
+          component,
+          context: {
+            ...context,
+            ...getPageContextData({ options, locale, routed: false }),
+          },
+        });
+      }
+      if (enforceLocalisedUrls && !hideDefaultLocaleInUrl) {
+        createRedirect({
+          fromPath: pathWithoutLocale,
+          toPath: path,
+          isPermanent: true,
+        });
+      }
     }
   });
 

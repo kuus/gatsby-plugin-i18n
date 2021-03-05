@@ -1,9 +1,12 @@
 const fs = require("fs");
 const path = require("path");
+const yaml = require("js-yaml");
 const { getOptions } = require("./options");
 const { normaliseSlashes, findRouteForPath } = require("./utils");
 
-const PATH_DATA = "src/data/i18n";
+/**
+ * @typedef {ReturnType<import("./options").getOptions>} Options
+ */
 
 const logger = (type = "log", msg) => {
   console[type](`gatsby-i18n: ${msg}`);
@@ -39,7 +42,7 @@ const writeRoutes = (data) => {
     // fs.writeFileSync(getRoutesProjectPath(), JSON.stringify(data, null, 2), "utf-8");
     fs.writeFileSync(getRoutesPath(), JSON.stringify(data), "utf-8");
   } catch (e) {
-    logger("error", `Failed to write file ${PATH_DATA}/routes.json`);
+    logger("error", `Failed to write file ${getRoutesPath()}`);
   }
 };
 
@@ -48,33 +51,35 @@ const addRoutes = (data) => {
   writeRoutes({ ...existingRoutes, ...data });
 };
 
-const getConfigPath = () => {
-  return path.resolve(`${PATH_DATA}/config.json`);
-};
+/**
+ * @param {Options} options
+ */
+// const readConfig = (pluginOptions) => {
+//   const { defaultLocale, locales, pathData } = getOptions(pluginOptions);
+//   let config = {
+//     defaultLocale,
+//     locales,
+//   };
+//   try {
+//     config = require(path.resolve(`${pathData}/config.yml`));
+//   } catch (e) {
+//     logger("error", `Missing file ${pathData}/config.yml`);
+//   }
 
-const readConfig = () => {
-  const { defaultLanguage, languages } = getOptions();
-  let config = {
-    defaultLanguage,
-    languages,
-  };
-  try {
-    config = require(getConfigPath());
-  } catch (e) {
-    logger("error", `Missing file ${PATH_DATA}/config.json`);
-  }
+//   return config;
+// };
 
-  return config;
-};
-
+/**
+ * @param {Options} options
+ */
 const writeConfig = (pluginOptions) => {
-  const { defaultLanguage, languages } = getOptions(pluginOptions);
-  const config = { defaultLanguage, languages };
-
+  const { defaultLocale, locales, pathData } = getOptions(pluginOptions);
+  const config = { defaultLocale, locales };
+  const content = yaml.dump(config);
   try {
-    fs.writeFileSync(getConfigPath(), JSON.stringify(config, null, 2), "utf-8");
+    fs.writeFileSync(path.resolve(`${pathData}/config.yml`), content, "utf-8");
   } catch (e) {
-    logger("error", `Failed to write file ${PATH_DATA}/config.json`);
+    logger("error", `Failed to write file ${pathData}/config.yml`);
   }
 
   return config;
@@ -95,32 +100,63 @@ const flattenMessages = (nestedMessages, prefix = "") => {
   }, {});
 };
 
-const getMessages = (fullPath, language) => {
+/**
+ * @param {string} fullPath
+ */
+const getMessages = (fullPath) => {
   try {
-    // TODO load yaml here
-    const messages = require(fullPath);
+    const messages = yaml.load(fs.readFileSync(fullPath, "utf8"));
 
     return flattenMessages(messages);
   } catch (error) {
     if (error.code === "MODULE_NOT_FOUND") {
       process.env.NODE_ENV !== "test" &&
-        console.error(`[gatsby-i18n] couldn't find file "${fullPath}"`);
+        logger("error", `couldn't find file "${fullPath}"`);
     }
 
     throw error;
   }
 };
 
-const getPageContextData = ({ lang, routed }, additional = {}) => {
-  const { languages, defaultLanguage } = readConfig();
-  lang = lang || defaultLanguage;
-  const messages = getMessages(path.resolve(`${PATH_DATA}/${lang}.json`), lang);
+/**
+ * @param {Options} options
+ * @param {string} locale
+ */
+const ensureLocalisedMessagesFile = (options, locale) => {
+  const fullPath = path.join(options.pathData, `${locale}.yml`);
+  if (!fs.existsSync(fullPath)) {
+    fs.writeFileSync(fullPath, "", "utf-8");
+  }
+
+  return fullPath;
+};
+
+/**
+ * @param {Options} pluginOptions
+ */
+const ensureLocalisedMessagesFiles = (pluginOptions) => {
+  const options = getOptions(pluginOptions);
+  options.locales.forEach((locale) => {
+    ensureLocalisedMessagesFile(options, locale);
+  });
+};
+
+/**
+ * @param {{ options: Options; locale: string; routed?: boolean }}
+ * @param {object}} additional
+ */
+const getPageContextData = ({ options, locale, routed }, additional = {}) => {
+  // const { locales, defaultLocale } = readConfig(options);
+  const { locales, defaultLocale } = options;
+  locale = locale || defaultLocale;
+  const messagesPath = ensureLocalisedMessagesFile(options, locale);
+  const messages = getMessages(messagesPath);
 
   return {
     i18n: {
-      languages,
-      defaultLanguage,
-      currentLanguage: lang,
+      locales,
+      defaultLocale,
+      currentLocale: locale,
       routed,
       messages,
       ...additional,
@@ -134,16 +170,18 @@ const getPageContextData = ({ lang, routed }, additional = {}) => {
  * Given the file "/my/page/index.en.md":
  * - `route` will be e.g. "/my/page"
  * - `slug` will be e.g. "/my/page"
- * - `lang` will be e.g. "en"
+ * - `locale` will be e.g. "en"
  * - `fileDir` will be e.g. "/my/page"
+ *
+ * @param {{ options: Options; fileAbsolutePath: string }}
  */
 const extractFromPath = ({ options, fileAbsolutePath }) => {
   const file = extractFileParts({ options, fileAbsolutePath });
   const route = getFileRouteId({ options, file });
   const slug = getFileSlug({ options, file });
-  const lang = getFileLang({ options, file });
+  const locale = getFileLocale({ options, file });
 
-  return { route, slug, lang, fileDir: file.dir };
+  return { route, slug, locale, fileDir: file.dir };
 };
 
 /**
@@ -152,7 +190,9 @@ const extractFromPath = ({ options, fileAbsolutePath }) => {
  * Given the file "/my/page/index.en.md" `file`'s properties will be:
  * - `dir` e.g. "/my/page"
  * - `name` e.g. "page"
- * - `lang` e.g. "en"
+ * - `locale` e.g. "en"
+ *
+ * @param {{ options: Options; fileAbsolutePath: string }}
  */
 const extractFileParts = ({ options, fileAbsolutePath }) => {
   const { pathContent } = options;
@@ -170,16 +210,17 @@ const extractFileParts = ({ options, fileAbsolutePath }) => {
   let name = path.basename(fileAbsolutePath, ".md");
   name = getTemplateBasename(name);
   const nameChunks = name.split(".");
-  // remove optional lang info from filename, e.g. "index.en.md"
+  // remove optional locale info from filename, e.g. "index.en.md"
   name = nameChunks[0];
-  // grab last name part after dot or return `null` if language is not specified
-  const lang = nameChunks.length > 1 ? nameChunks[nameChunks.length - 1] : null;
+  // grab last name part after dot or return `null` if locale is not specified
+  const locale =
+    nameChunks.length > 1 ? nameChunks[nameChunks.length - 1] : null;
 
-  return { dir, name, lang };
+  return { dir, name, locale };
 };
 
 // matches the src/pages directory structure, which represents the default
-// language slugs usually
+// locale slugs usually
 const getFileRouteId = ({ file }) => {
   let { dir, name } = file;
   let route = name === "index" ? dir : `${dir}/${name}`;
@@ -200,22 +241,21 @@ const getFileSlug = ({ file }) => {
   return slug;
 };
 
-const getFileLang = ({ options, file }) => {
-  const { languages, defaultLanguage } = options;
-  let lang = defaultLanguage;
+const getFileLocale = ({ options, file }) => {
+  const { locales, defaultLocale } = options;
+  let locale = defaultLocale;
 
-  if (file.lang) {
-    if (languages.includes(file.lang)) {
-      lang = file.lang;
+  if (file.locale) {
+    if (locales.includes(file.locale)) {
+      locale = file.locale;
     } else {
-      // TODO: proper logging
-      console.error(
-        `You need to add the language ${file.lang} to the plugin options`
+      logger(
+        "error"`You need to add the locale ${file.locale} to the plugin options`
       );
     }
   }
 
-  return lang;
+  return locale;
 };
 
 /**
@@ -224,7 +264,7 @@ const getFileLang = ({ options, file }) => {
  * It checks that the given file path is within the `pathContent` defined in the
  * plugin options and that it is not a template
  *
- * @param {string|Array<string>} { pathContent }
+ * @param {{ pathContent: string|Array<string>; templateName: string }}
  * @param {string} filePath
  * @returns {boolean}
  */
@@ -276,4 +316,5 @@ module.exports = {
   getTemplateBasename,
   normaliseSlashes,
   findRouteForPath,
+  ensureLocalisedMessagesFiles,
 };

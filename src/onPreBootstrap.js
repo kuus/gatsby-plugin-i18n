@@ -1,7 +1,12 @@
-const { writeConfig, cleanRoutes } = require("./utils-plugin");
+const {
+  writeConfig,
+  ensureLocalisedMessagesFiles,
+  cleanRoutes,
+} = require("./utils-plugin");
 
 const onPreBootstrap = (args, pluginOptions) => {
-  writeConfig(pluginOptions);
+  // writeConfig(pluginOptions);
+  ensureLocalisedMessagesFiles(pluginOptions);
   cleanRoutes();
 };
 

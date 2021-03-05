@@ -8,9 +8,9 @@ declare namespace GatsbyI18n {
   }
 
   export interface PageContext {
-    defaultLanguage: string;
-    currentLanguage: string;
-    languages: string[];
+    defaultLocale: string;
+    currentLocale: string;
+    locales: string[];
     messages: { [key: string]: string };
     routes: Routes;
   }
