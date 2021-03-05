@@ -1,13 +1,13 @@
 const {
-  writeConfig,
+  writeI18nOptions,
   ensureLocalisedMessagesFiles,
-  cleanRoutes,
+  cleanI18nRoutesMap,
 } = require("./utils-plugin");
 
 const onPreBootstrap = (args, pluginOptions) => {
-  // writeConfig(pluginOptions);
+  writeI18nOptions(pluginOptions);
   ensureLocalisedMessagesFiles(pluginOptions);
-  cleanRoutes();
+  cleanI18nRoutesMap();
 };
 
 module.exports = onPreBootstrap;

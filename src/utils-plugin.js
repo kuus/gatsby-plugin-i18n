@@ -1,3 +1,5 @@
+// @ts-check
+
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
@@ -6,83 +8,106 @@ const { normaliseSlashes, findRouteForPath } = require("./utils");
 
 /**
  * @typedef {ReturnType<import("./options").getOptions>} Options
+ *
+ * @typedef {{ [key: string]: { [key: string]: string } }} RoutesMap
  */
 
+/**
+ * Internal logger
+ *
+ * @param {"log" | "info" | "error" | "warn"} type Console method
+ * @param {string} msg Log message
+ */
 const logger = (type = "log", msg) => {
   console[type](`gatsby-i18n: ${msg}`);
 };
-
-// const getRoutesProjectPath = () => {
-//   return path.resolve(`${PATH_DATA}/routes.json`);
-// };
 
 const getRoutesPath = () => {
   return `${__dirname}/.routes.json`;
 };
 
-const cleanRoutes = () => {
-  writeRoutes({});
+const getOptionsPath = () => {
+  return `${__dirname}/.config.json`;
 };
 
-const readRoutes = () => {
-  const filePath = getRoutesPath();
-  let existingRoutes = {};
+/**
+ * Clean/resets the routes mapping cached to disk
+ */
+const cleanI18nRoutesMap = () => {
+  writeI18nRoutesMap({});
+};
+
+/**
+ * Read and returns the routes mapping cached to disk
+ */
+const getI18nRoutesMap = () => {
+  let routesMap = {};
+
   try {
-    existingRoutes = JSON.parse(fs.readFileSync(filePath));
+    routesMap = require(getRoutesPath());
   } catch (e) {
-    logger("warn", `Failed to read file ${filePath}`);
+    logger("warn", `Failed to read file ${getRoutesPath()}`);
   }
 
-  return existingRoutes;
+  return routesMap;
 };
 
-const writeRoutes = (data) => {
+/**
+ * Write the routes mapping to disk, mostly in order to be used from the custom
+ * Link component
+ *
+ * @param {RoutesMap} data
+ */
+const writeI18nRoutesMap = (data) => {
   try {
-    // FIXME: decide where to write the routes file or explain why keep both
-    // fs.writeFileSync(getRoutesProjectPath(), JSON.stringify(data, null, 2), "utf-8");
     fs.writeFileSync(getRoutesPath(), JSON.stringify(data), "utf-8");
   } catch (e) {
     logger("error", `Failed to write file ${getRoutesPath()}`);
   }
 };
 
-const addRoutes = (data) => {
-  const existingRoutes = readRoutes();
-  writeRoutes({ ...existingRoutes, ...data });
+/**
+ * Add routes mapping to disk cache file, this helper can be used from your project
+ * for instance to dynamically add localised pages like tags in your project's
+ * `gatsby-node.js`
+ *
+ * @param {RoutesMap} data
+ */
+const addI18nRoutesMappings = (data) => {
+  const existingRoutes = getI18nRoutesMap();
+  writeI18nRoutesMap({ ...existingRoutes, ...data });
 };
 
 /**
- * @param {Options} options
+ * @returns {Options}
  */
-// const readConfig = (pluginOptions) => {
-//   const { defaultLocale, locales, pathData } = getOptions(pluginOptions);
-//   let config = {
-//     defaultLocale,
-//     locales,
-//   };
-//   try {
-//     config = require(path.resolve(`${pathData}/config.yml`));
-//   } catch (e) {
-//     logger("error", `Missing file ${pathData}/config.yml`);
-//   }
-
-//   return config;
-// };
+const getI18nOptions = () => {
+  try {
+    return getOptions(require(getOptionsPath()));
+  } catch (e) {
+    logger("error", `Failed to read file ${getOptionsPath()}`);
+  }
+};
 
 /**
- * @param {Options} options
+ * We write config to a file so that we can use it from the project implementing
+ * this plugin in its own `onCreatePage` gatsby-node hook, the reason for this
+ * is that we cannot get the pages created from this plugin's `onCreatePage`
+ * because gatsby prevents it to avoid infinite loop, see [comment here](./onCreatePage).
+ * Because of this that work need to be done in the project and in there we cannot
+ * get this plugin's options and configuration, so we write it to a file and
+ * read it with `getI18nOptions` at the right time.
+ *
+ * @param {Options} pluginOptions
  */
-const writeConfig = (pluginOptions) => {
-  const { defaultLocale, locales, pathData } = getOptions(pluginOptions);
-  const config = { defaultLocale, locales };
-  const content = yaml.dump(config);
-  try {
-    fs.writeFileSync(path.resolve(`${pathData}/config.yml`), content, "utf-8");
-  } catch (e) {
-    logger("error", `Failed to write file ${pathData}/config.yml`);
-  }
+const writeI18nOptions = (pluginOptions) => {
+  const data = getOptions(pluginOptions);
 
-  return config;
+  try {
+    fs.writeFileSync(getOptionsPath(), JSON.stringify(data), "utf-8");
+  } catch (e) {
+    logger("error", `Failed to write file ${getOptionsPath()}`);
+  }
 };
 
 const flattenMessages = (nestedMessages, prefix = "") => {
@@ -119,8 +144,11 @@ const getMessages = (fullPath) => {
 };
 
 /**
+ * If a localised messages file (e.g. `en.yml`) does not exist it creates it
+ *
  * @param {Options} options
  * @param {string} locale
+ * @returns {string} The path of the localised messages file
  */
 const ensureLocalisedMessagesFile = (options, locale) => {
   const fullPath = path.join(options.pathData, `${locale}.yml`);
@@ -132,6 +160,8 @@ const ensureLocalisedMessagesFile = (options, locale) => {
 };
 
 /**
+ * Ensure that files with translated strings exist, if the don't they are created
+ *
  * @param {Options} pluginOptions
  */
 const ensureLocalisedMessagesFiles = (pluginOptions) => {
@@ -142,12 +172,13 @@ const ensureLocalisedMessagesFiles = (pluginOptions) => {
 };
 
 /**
- * @param {{ options: Options; locale: string; routed?: boolean }}
- * @param {object}} additional
+ * Get gatsby's page context data
+ *
+ * @param {{ options: Options; locale: string; routed?: boolean }} args
+ * @param {object} additional
  */
 const getPageContextData = ({ options, locale, routed }, additional = {}) => {
-  // const { locales, defaultLocale } = readConfig(options);
-  const { locales, defaultLocale } = options;
+  const { locales, defaultLocale } = options || getI18nOptions();
   locale = locale || defaultLocale;
   const messagesPath = ensureLocalisedMessagesFile(options, locale);
   const messages = getMessages(messagesPath);
@@ -173,12 +204,12 @@ const getPageContextData = ({ options, locale, routed }, additional = {}) => {
  * - `locale` will be e.g. "en"
  * - `fileDir` will be e.g. "/my/page"
  *
- * @param {{ options: Options; fileAbsolutePath: string }}
+ * @param {{ options: Options; fileAbsolutePath: string; }} args
  */
 const extractFromPath = ({ options, fileAbsolutePath }) => {
   const file = extractFileParts({ options, fileAbsolutePath });
-  const route = getFileRouteId({ options, file });
-  const slug = getFileSlug({ options, file });
+  const route = getFileRouteId({ file });
+  const slug = getFileSlug({ file });
   const locale = getFileLocale({ options, file });
 
   return { route, slug, locale, fileDir: file.dir };
@@ -196,7 +227,7 @@ const extractFromPath = ({ options, fileAbsolutePath }) => {
  */
 const extractFileParts = ({ options, fileAbsolutePath }) => {
   const { pathContent } = options;
-  let rightContentPath = pathContent;
+  let rightContentPath = "";
   if (Array.isArray(pathContent)) {
     const matches = pathContent.filter((p) => fileAbsolutePath.includes(p));
     if (matches) {
@@ -219,8 +250,14 @@ const extractFileParts = ({ options, fileAbsolutePath }) => {
   return { dir, name, locale };
 };
 
-// matches the src/pages directory structure, which represents the default
-// locale slugs usually
+/**
+ * Get file's routeId from the information extracted by its path
+ *
+ * The routeId matches the src/pages directory structure, which represents the
+ * default locale slugs usually
+ *
+ * @param {{ file: ReturnType<extractFileParts> }} args
+ */
 const getFileRouteId = ({ file }) => {
   let { dir, name } = file;
   let route = name === "index" ? dir : `${dir}/${name}`;
@@ -234,6 +271,11 @@ const getFileRouteId = ({ file }) => {
   // return route || "index";
 };
 
+/**
+ * Get file's slug from the information extracted by its path
+ *
+ * @param {{ file: ReturnType<extractFileParts> }} args
+ */
 const getFileSlug = ({ file }) => {
   let { dir, name } = file;
   let slug = name === "index" ? dir : `${dir}/${name}`;
@@ -250,7 +292,8 @@ const getFileLocale = ({ options, file }) => {
       locale = file.locale;
     } else {
       logger(
-        "error"`You need to add the locale ${file.locale} to the plugin options`
+        "error",
+        `You need to add the locale ${file.locale} to the plugin options`
       );
     }
   }
@@ -305,11 +348,152 @@ const getTemplateBasename = (name) => {
   return name;
 };
 
+/**
+ * Here we should create tha same context that we do on `createPages`, it would
+ * be better to just create it once here but there is an issue with gatsby that
+ * programmatically created pages do not trigger the `onCreatePage` hook,
+ * @see https://github.com/gatsbyjs/gatsby/issues/5255
+ *
+ * The Gatsby docs says in fact: "There is a mechanism in Gatsby to prevent
+ * calling onCreatePage for pages created by the same gatsby-node.js to avoid
+ * infinite loops/callback."
+ *
+ * @see https://www.gatsbyjs.com/docs/reference/config-files/gatsby-node/#onCreatePage
+ */
+const onCreatePage = ({ page, actions }) => {
+  const { createPage, createRedirect, deletePage } = actions;
+  const options = getI18nOptions();
+  const { locales, templateName, excludePaths } = options;
+  const normalisedExcludedPaths = excludePaths.map(normaliseSlashes);
+  const oldPage = { ...page };
+  const templateBasename = getTemplateBasename(templateName);
+
+  if (page.path.endsWith(`/${templateBasename}/`)) {
+    // console.log(`"onCreatePage" page template "${templateBasename}" deleted`);
+    deletePage(oldPage);
+  } else if (page.path.match(/dev-404/)) {
+    // console.log(`"onCreatePage" matched dev-404: ${page.path}`);
+    createPage(page);
+  } else if (page.path === "/404.html") {
+    // console.log(`"onCreatePage" matched 404.html: ${page.path}`);
+    deletePage(oldPage);
+    createPage(getPage(options, page, null, "404.html", "404.html"));
+    // locales.forEach((locale) => {
+    //   // FIXME: last argument`matchPath` should be "*" ?
+    //   createPage(getPage(options, page, locale, "404.html"));
+    // });
+  } else if (page.path === "/404/") {
+    // console.log(`"onCreatePage" matched 404: ${page.path}`);
+    deletePage(oldPage);
+    createPage(getPage(options, page, null, "404", "404"));
+    locales.forEach((locale) => {
+      // FIXME: last argument`matchPath` should be "*" ?
+      createPage(getPage(options, page, locale, "404"));
+    });
+  } else {
+    // add routes only for pages that loosely placed as `.js/.tsx` files in
+    // `src/pages`. For these pages we automatically create the needed localised
+    // urls keeping the same slug as the file name (which is what Gatsby uses
+    // by default) and the localisation is delegated to the project creator who
+    // should use the injectIntl HOC and define the translations in the
+    // `src/content/settings/i18n/$locale.yml` files.
+    // For the pages not created this way but instead programmatically created
+    // in the `createPages` of your project you need instead to manually
+    // create the route object and add it through `gatsby-i18n` API
+    // `addI18nRoutesMappings`.
+    if (page.isCreatedByStatefulCreatePages) {
+      if (normalisedExcludedPaths.includes(page.path)) {
+        if (options.debug) {
+          logger(
+            "info",
+            `"onCreatePage" matched path to exclude from localisation: ${page.path}`
+          );
+        }
+      } else {
+        if (options.debug) {
+          logger(
+            "info",
+            `Page "${page.path}" is deleted in the hook "onCreatePage" and localised`
+          );
+        }
+        const { enforceLocalisedUrls, hideDefaultLocaleInUrl } = options;
+        const routeMap = /** @type {RoutesMap} */ ({});
+        const routeId = normaliseSlashes(`/${page.path}`);
+
+        // first always delete
+        deletePage(oldPage);
+
+        // then produce the localised pages according to the current i18n options
+        if (hideDefaultLocaleInUrl) {
+          createPage(getPage(options, page, null, page.path));
+          routeMap[routeId] = routeMap[routeId] || {};
+          routeMap[routeId][options.defaultLocale] = normaliseSlashes(
+            page.path
+          );
+        } else {
+          createRedirect({
+            fromPath: page.path,
+            toPath: normaliseSlashes(`/${options.defaultLocale}/${page.path}`),
+            isPermanent: true,
+          });
+        }
+
+        locales.forEach((locale) => {
+          let shouldCreate = true;
+          if (locale === options.defaultLocale && hideDefaultLocaleInUrl) {
+            shouldCreate = false;
+          }
+
+          if (shouldCreate) {
+            routeMap[routeId] = routeMap[routeId] || {};
+            routeMap[routeId][locale] = normaliseSlashes(
+              `/${locale}/${page.path}`
+            );
+            createPage(getPage(options, page, locale, page.path));
+          }
+        });
+        addI18nRoutesMappings(routeMap);
+      }
+    }
+  }
+};
+
+/**
+ *
+ * @param {Options} options
+ * @param {any} page
+ * @param {string} [locale]
+ * @param {string} [path]
+ * @param {string} [matchPath]
+ */
+const getPage = (options, page, locale, path, matchPath) => {
+  const hasWildcard = matchPath ? matchPath.indexOf("*") >= 0 : false;
+  const data = {
+    ...page,
+    context: {
+      ...page.context,
+      ...getPageContextData({ options, locale, routed: !!locale }),
+    },
+  };
+  path = locale ? `/${locale}/${path}` : `/${path}`;
+  data.path = normaliseSlashes(path);
+
+  if (matchPath) {
+    matchPath = locale ? `/${locale}/${matchPath}` : `/${matchPath}`;
+    // don't add trailing slash to 404 wildcard match path, otherwise we would
+    // have the following matchPath value: `/en/*/`
+    matchPath = hasWildcard ? matchPath : normaliseSlashes(matchPath);
+    data.matchPath = matchPath;
+  }
+
+  return data;
+};
+
 module.exports = {
   logger,
-  cleanRoutes,
-  addRoutes,
-  writeConfig,
+  cleanI18nRoutesMap,
+  addI18nRoutesMappings,
+  writeI18nOptions,
   getPageContextData,
   extractFromPath,
   isFileToLocalise,
@@ -317,4 +501,5 @@ module.exports = {
   normaliseSlashes,
   findRouteForPath,
   ensureLocalisedMessagesFiles,
+  onCreatePage,
 };

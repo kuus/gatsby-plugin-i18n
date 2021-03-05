@@ -1,6 +1,6 @@
+// @ts-check
+
 import React from "react";
-import browserLang from "browser-lang";
-import { withPrefix } from "gatsby";
 import { IntlProvider } from "react-intl";
 import { IntlContextProvider } from "./IntlContext";
 import { getOptions } from "./options";
@@ -124,56 +124,14 @@ const WrapPageElement = ({ element, props }, pluginOptions) => {
     return element;
   }
 
-  const { currentLocale, locales, redirect, routed } = i18n;
-
-  const isRedirect = redirect && !routed;
-
-  // TODO: check that redirection option works or remove it
-  if (isRedirect) {
-    const { pathname, search } = props.location;
-
-    // Skip build, Browsers only
-    if (typeof window !== "undefined") {
-      let detectedLocale =
-        window.localStorage.getItem("gatsby-i18n-locale") ||
-        browserLang({
-          locales,
-          fallback: currentLocale,
-        });
-
-      if (!locales.includes(detectedLocale)) {
-        detectedLocale = currentLocale;
-      }
-
-      const queryParams = search || "";
-      const route = findRouteForPath(i18nRoutes, pathname);
-      const routeLink = route ? route[detectedLocale] : null;
-      let newUrl = "";
-      if (routeLink) {
-        newUrl = routeLink || `/${detectedLocale}${pathname}`;
-      }
-
-      newUrl = withPrefix(`/${newUrl}${queryParams}`);
-      window.localStorage.setItem("gatsby-i18n-locale", detectedLocale);
-      window.location.replace(newUrl);
-    }
-  }
-
   if (typeof window !== "undefined") {
-    window.___gatsbyI18n = { ...i18n, routes: i18nRoutes };
+    window["___gatsbyI18n"] = { ...i18n, routes: i18nRoutes };
   }
-
-  const renderElement = /* isRedirect
-    ? GATSBY_INTL_REDIRECT_COMPONENT_PATH &&
-      React.createElement(
-        preferDefault(require(GATSBY_INTL_REDIRECT_COMPONENT_PATH))
-      )
-    : */ element;
 
   const renderElementWithSeo = (
     <>
       <I18nSEO i18n={i18n} location={props.location} options={options} />
-      {renderElement}
+      {element}
     </>
   );
 

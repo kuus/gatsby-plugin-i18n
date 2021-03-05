@@ -15,7 +15,7 @@ const onCreateNode = ({ node, actions }, pluginOptions) => {
     case "File":
       fileAbsolutePath = node.absolutePath;
 
-      // check file extensions otherwise we get a lot of unneded files
+      // check file extensions otherwise we get a lot of unneeded files
       if ([".md", ".js", ".jsx", ".ts", ".tsx"].indexOf(node.ext) === -1) {
         return;
       }

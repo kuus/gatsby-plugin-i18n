@@ -1,3 +1,5 @@
+// @ts-check
+
 import React from "react";
 import { Link as GatsbyLink, navigate as gatsbyNavigate } from "gatsby";
 import { IntlContextConsumer } from "./IntlContext";
@@ -71,7 +73,7 @@ export const navigate = (to, options) => {
     return;
   }
 
-  const destination = getDestination({ i18n: window.___gatsbyI18n, to });
+  const destination = getDestination({ i18n: window["___gatsbyI18n"], to });
   gatsbyNavigate(destination, options);
 };
 
@@ -81,7 +83,7 @@ export const changeLocale = (locale, to) => {
   }
 
   const destination = getDestination({
-    i18n: window.___gatsbyI18n,
+    i18n: window["___gatsbyI18n"],
     to,
     locale,
   });
@@ -94,7 +96,7 @@ export const getCurrentRoute = (location, locale) => {
     return;
   }
 
-  const { routes } = window.___gatsbyI18n;
+  const { routes } = window["___gatsbyI18n"];
   const matchedRoute = findRouteForPath(routes, location.pathname);
 
   if (matchedRoute) {

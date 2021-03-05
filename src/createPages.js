@@ -1,3 +1,5 @@
+// @ts-check
+
 const nodePath = require("path");
 const fs = require("fs");
 const { getOptions } = require("./options");
@@ -6,7 +8,7 @@ const {
   normaliseSlashes,
   getPageContextData,
   getTemplateBasename,
-  addRoutes,
+  addI18nRoutesMappings,
 } = require("./utils-plugin");
 
 const getPageComponent = ({ options, node }) => {
@@ -109,7 +111,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   const filePages = result.data.allFile.edges;
   const markdownPages = result.data.allMarkdown.edges;
   const allPages = markdownPages.concat(filePages);
-  const routes = {};
+  const routes = /** @type {import("./utils-plugin").RoutesMap} */ ({});
 
   // build routes map
   allPages.forEach((edge) => {
@@ -193,7 +195,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     // create page with localised URL
     if (
       locale !== options.defaultLocale ||
-      (locale == options.defaultLocale && enforceLocalisedUrls)
+      (locale == options.defaultLocale && !hideDefaultLocaleInUrl)
     ) {
       createPage({
         path: path,
@@ -207,13 +209,13 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
 
     // create same page without locale slug in URL for default locale
     // if declared options
-    // TODO: maybe instead of this create Netlify `_redirects` file automatically
+    // TODO: check that `gatsby-plugin-netlify` actually create the` `_redirects`
     if (locale === options.defaultLocale) {
       const pathWithoutLocale = normaliseSlashes(
         slug.replace(`/${options.defaultLocale}`, "")
       );
 
-      if (!enforceLocalisedUrls && hideDefaultLocaleInUrl) {
+      if (hideDefaultLocaleInUrl) {
         createPage({
           path: pathWithoutLocale,
           component,
@@ -233,7 +235,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     }
   });
 
-  addRoutes(routes);
+  addI18nRoutesMappings(routes);
 };
 
 module.exports = createPages;

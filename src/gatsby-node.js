@@ -1,3 +1,5 @@
+// @ts-check
+
 const webpack = require("webpack");
 
 // exactly as `gatsby-plugin-intl`: @see
@@ -23,5 +25,4 @@ exports.onCreateWebpackConfig = ({ actions, plugins }, pluginOptions) => {
 
 exports.onPreBootstrap = require("./onPreBootstrap");
 exports.onCreateNode = require("./onCreateNode");
-exports.onCreatePage = require("./onCreatePage");
 exports.createPages = require("./createPages");
