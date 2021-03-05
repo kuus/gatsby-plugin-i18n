@@ -1,8 +1,7 @@
-// const nodePath = require("path");
 const { getOptions } = require("./options");
 const {
   extractFromPath,
-  normaliseSlashes,
+  normaliseUrlPath,
   isFileToLocalise,
   logger,
 } = require("./utils-plugin");
@@ -46,10 +45,8 @@ const onCreateNode = ({ node, actions }, pluginOptions) => {
     node.frontmatter[options.frontmatterKeyForLocalisedSlug]
   ) {
     slug = node.frontmatter[options.frontmatterKeyForLocalisedSlug];
+    slug = normaliseUrlPath(slug);
   }
-
-  slug = normaliseSlashes(slug);
-  route = normaliseSlashes(route);
 
   createNodeField({ node, name: "locale", value: locale });
   createNodeField({ node, name: "route", value: route });

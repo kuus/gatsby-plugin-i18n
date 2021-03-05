@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 const { getOptions } = require("./options");
-const { normaliseSlashes, findRouteForPath } = require("./utils");
+const { normaliseUrlPath, normaliseRouteId, findRouteForPath } = require("./utils");
 
 /**
  * @typedef {ReturnType<import("./options").getOptions>} Options
@@ -207,10 +207,10 @@ const getPageContextData = ({ options, locale, routed }, additional = {}) => {
  * @param {{ options: Options; fileAbsolutePath: string; }} args
  */
 const extractFromPath = ({ options, fileAbsolutePath }) => {
-  const file = extractFileParts({ options, fileAbsolutePath });
-  const route = getFileRouteId({ file });
-  const slug = getFileSlug({ file });
-  const locale = getFileLocale({ options, file });
+  const file = extractFileParts(options, fileAbsolutePath);
+  const route = getFileRouteId(file);
+  const slug = getFileSlug(file);
+  const locale = getFileLocale(options, file);
 
   return { route, slug, locale, fileDir: file.dir };
 };
@@ -223,9 +223,10 @@ const extractFromPath = ({ options, fileAbsolutePath }) => {
  * - `name` e.g. "page"
  * - `locale` e.g. "en"
  *
- * @param {{ options: Options; fileAbsolutePath: string }}
+ * @param {Options} options
+ * @param {string} fileAbsolutePath
  */
-const extractFileParts = ({ options, fileAbsolutePath }) => {
+const extractFileParts = (options, fileAbsolutePath) => {
   const { pathContent } = options;
   let rightContentPath = "";
   if (Array.isArray(pathContent)) {
@@ -256,34 +257,31 @@ const extractFileParts = ({ options, fileAbsolutePath }) => {
  * The routeId matches the src/pages directory structure, which represents the
  * default locale slugs usually
  *
- * @param {{ file: ReturnType<extractFileParts> }} args
+ * @param {ReturnType<typeof extractFileParts>} file
  */
-const getFileRouteId = ({ file }) => {
-  let { dir, name } = file;
-  let route = name === "index" ? dir : `${dir}/${name}`;
-  route = normaliseSlashes(route);
-  return route;
-
-  // TODO: decide whether to normalise instead the routes keys so to have e.g.
-  // "parent-page" instead of "/parent/page":
-  // let route = name === "index" ? dir : dir + "-" + name;
-  // route = route.replace(/\//g, "-").replace(/^-/, "");
-  // return route || "index";
+const getFileRouteId = ({ dir, name }) => {
+  let routeId = name === "index" ? dir : `${dir}/${name}`;
+  routeId = normaliseRouteId(routeId);
+  return routeId;
 };
 
 /**
  * Get file's slug from the information extracted by its path
  *
- * @param {{ file: ReturnType<extractFileParts> }} args
+ * @param {ReturnType<typeof extractFileParts>} file
  */
-const getFileSlug = ({ file }) => {
-  let { dir, name } = file;
+const getFileSlug = ({ dir, name }) => {
   let slug = name === "index" ? dir : `${dir}/${name}`;
-  slug = normaliseSlashes(slug);
+  slug = normaliseUrlPath(slug);
   return slug;
 };
 
-const getFileLocale = ({ options, file }) => {
+/**
+ * 
+ * @param {Options} options
+ * @param {ReturnType<typeof extractFileParts>} file
+ */
+const getFileLocale = (options, file) => {
   const { locales, defaultLocale } = options;
   let locale = defaultLocale;
 
@@ -364,7 +362,7 @@ const onCreatePage = ({ page, actions }) => {
   const { createPage, createRedirect, deletePage } = actions;
   const options = getI18nOptions();
   const { locales, templateName, excludePaths } = options;
-  const normalisedExcludedPaths = excludePaths.map(normaliseSlashes);
+  const normalisedExcludedPaths = excludePaths.map(normaliseUrlPath);
   const oldPage = { ...page };
   const templateBasename = getTemplateBasename(templateName);
 
@@ -385,11 +383,34 @@ const onCreatePage = ({ page, actions }) => {
   } else if (page.path === "/404/") {
     // console.log(`"onCreatePage" matched 404: ${page.path}`);
     deletePage(oldPage);
-    createPage(getPage(options, page, null, "404", "404"));
+
+    const routesMap = /** @type {RoutesMap} */ ({});
+    const routeId = normaliseRouteId(page.path);
+    
+    if (sholdCreateUnlocalisedPage(options)) {
+      createPage(getPage(options, page, null, "404", "404"));
+      routesMap[routeId] = routesMap[routeId] || {};
+      routesMap[routeId][options.defaultLocale] = normaliseUrlPath(
+        page.path
+      );
+    } else {
+      createRedirect({
+        fromPath: page.path,
+        toPath: normaliseUrlPath(`/${options.defaultLocale}/${page.path}`),
+        isPermanent: true,
+      });
+    }
+    
     locales.forEach((locale) => {
       // FIXME: last argument`matchPath` should be "*" ?
-      createPage(getPage(options, page, locale, "404"));
+      if (sholdCreateLocalisedPage(options, locale)) {
+        createPage(getPage(options, page, locale, "404"));
+        routesMap[routeId] = routesMap[routeId] || {};
+        routesMap[routeId][locale] = normaliseUrlPath(`/${locale}/404`);
+      }
     });
+
+    addI18nRoutesMappings(routesMap);
   } else {
     // add routes only for pages that loosely placed as `.js/.tsx` files in
     // `src/pages`. For these pages we automatically create the needed localised
@@ -416,47 +437,67 @@ const onCreatePage = ({ page, actions }) => {
             `Page "${page.path}" is deleted in the hook "onCreatePage" and localised`
           );
         }
-        const { enforceLocalisedUrls, hideDefaultLocaleInUrl } = options;
-        const routeMap = /** @type {RoutesMap} */ ({});
-        const routeId = normaliseSlashes(`/${page.path}`);
+        const routesMap = /** @type {RoutesMap} */ ({});
+        const routeId = normaliseRouteId(page.path);
 
         // first always delete
         deletePage(oldPage);
 
         // then produce the localised pages according to the current i18n options
-        if (hideDefaultLocaleInUrl) {
+        if (sholdCreateUnlocalisedPage(options)) {
           createPage(getPage(options, page, null, page.path));
-          routeMap[routeId] = routeMap[routeId] || {};
-          routeMap[routeId][options.defaultLocale] = normaliseSlashes(
+          routesMap[routeId] = routesMap[routeId] || {};
+          routesMap[routeId][options.defaultLocale] = normaliseUrlPath(
             page.path
           );
         } else {
           createRedirect({
             fromPath: page.path,
-            toPath: normaliseSlashes(`/${options.defaultLocale}/${page.path}`),
+            toPath: normaliseUrlPath(`/${options.defaultLocale}/${page.path}`),
             isPermanent: true,
           });
         }
 
         locales.forEach((locale) => {
-          let shouldCreate = true;
-          if (locale === options.defaultLocale && hideDefaultLocaleInUrl) {
-            shouldCreate = false;
-          }
-
-          if (shouldCreate) {
-            routeMap[routeId] = routeMap[routeId] || {};
-            routeMap[routeId][locale] = normaliseSlashes(
+          if (sholdCreateLocalisedPage(options, locale)) {
+            routesMap[routeId] = routesMap[routeId] || {};
+            routesMap[routeId][locale] = normaliseUrlPath(
               `/${locale}/${page.path}`
             );
             createPage(getPage(options, page, locale, page.path));
           }
         });
-        addI18nRoutesMappings(routeMap);
+        addI18nRoutesMappings(routesMap);
       }
     }
   }
 };
+
+/**
+ * 
+ * @param {Options} options 
+ * @param {string} [locale] 
+ */
+const sholdCreateUnlocalisedPage = (options, locale) => {
+  locale = locale || options.defaultLocale;
+
+  if (locale === options.defaultLocale && options.hideDefaultLocaleInUrl) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * 
+ * @param {Options} options 
+ * @param {string} locale 
+ */
+const sholdCreateLocalisedPage = (options, locale) => {
+  if (locale === options.defaultLocale && options.hideDefaultLocaleInUrl) {
+    return false;
+  }
+  return true;
+}
 
 /**
  *
@@ -476,13 +517,13 @@ const getPage = (options, page, locale, path, matchPath) => {
     },
   };
   path = locale ? `/${locale}/${path}` : `/${path}`;
-  data.path = normaliseSlashes(path);
+  data.path = normaliseUrlPath(path);
 
   if (matchPath) {
     matchPath = locale ? `/${locale}/${matchPath}` : `/${matchPath}`;
     // don't add trailing slash to 404 wildcard match path, otherwise we would
     // have the following matchPath value: `/en/*/`
-    matchPath = hasWildcard ? matchPath : normaliseSlashes(matchPath);
+    matchPath = hasWildcard ? matchPath : normaliseUrlPath(matchPath);
     data.matchPath = matchPath;
   }
 
@@ -498,7 +539,7 @@ module.exports = {
   extractFromPath,
   isFileToLocalise,
   getTemplateBasename,
-  normaliseSlashes,
+  normaliseUrlPath,
   findRouteForPath,
   ensureLocalisedMessagesFiles,
   onCreatePage,

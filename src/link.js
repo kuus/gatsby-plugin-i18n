@@ -3,7 +3,7 @@
 import React from "react";
 import { Link as GatsbyLink, navigate as gatsbyNavigate } from "gatsby";
 import { IntlContextConsumer } from "./IntlContext";
-import { findRouteForPath, normaliseSlashes } from "./utils";
+import { findRouteForPath, normaliseUrlPath } from "./utils";
 import i18nRoutes from "./.routes.json";
 
 const getDestination = ({ i18n, to, locale }) => {
@@ -11,7 +11,7 @@ const getDestination = ({ i18n, to, locale }) => {
   // normalising here allows us to write links such as "pages/about" instead of
   // "/pages/about/" and still match the route key in the `.routes.json` (which
   // corresponds to the markdown file relative path)
-  const route = i18nRoutes[normaliseSlashes(to)];
+  const route = i18nRoutes[normaliseUrlPath(to)];
   locale = locale || i18n.currentLocale;
   const localisedTo = route ? route[locale] || route[i18n.defaultLocale] : to;
 

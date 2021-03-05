@@ -5,5 +5,5 @@ export {
   changeLocale,
   getCurrentRoute,
 } from "./link";
-export { normaliseSlashes, findRouteForPath } from "./utils";
+export { normaliseUrlPath, findRouteForPath } from "./utils";
 export { IntlContextConsumer } from "./IntlContext";

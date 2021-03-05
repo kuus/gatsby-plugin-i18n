@@ -1,7 +1,7 @@
 // @ts-check
 
 /**
- * Normalise slashes
+ * Normalise URL path
  *
  * Always add a slash at the begininng and enforce the trailing slash.
  * The reason for the trailing slash is explained in the README,
@@ -10,10 +10,27 @@
  * @param {string} input
  * @returns {string}
  */
-const normaliseSlashes = (input) => {
+const normaliseUrlPath = (input) => {
   input = input.replace(/\/+\//g, "/") + "/";
   return `/${input.replace(/^\/+/, "").replace(/\/+$/, "/")}`;
 };
+
+/**
+ * Normalise route id
+ * 
+ * TODO: decide whether to have e.g.
+ * "parent-page" instead of "/parent/page":
+ * let route = name === "index" ? dir : dir + "-" + name;
+ * route = route.replace(/\//g, "-").replace(/^-/, "");
+ * return route || "index";
+
+ * @param {string} input 
+ */
+const normaliseRouteId = (input) => {
+  input = normaliseUrlPath(`/${input}/`);
+  return input;
+};
+
 
 /**
  * Find route object that matches the given path
@@ -22,7 +39,7 @@ const normaliseSlashes = (input) => {
  * @returns ?GatsbyI18n.Route
  */
 const findRouteForPath = (routes, path) => {
-  const normalisedPath = normaliseSlashes(path);
+  const normalisedPath = normaliseUrlPath(path);
   for (const routeKey in routes) {
     const route = routes[routeKey];
     for (const routeLocale in route) {
@@ -39,6 +56,7 @@ const findRouteForPath = (routes, path) => {
 };
 
 module.exports = {
-  normaliseSlashes,
+  normaliseUrlPath,
+  normaliseRouteId,
   findRouteForPath,
 };
