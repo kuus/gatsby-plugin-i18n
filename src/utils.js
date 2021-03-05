@@ -31,7 +31,6 @@ const normaliseRouteId = (input) => {
   return input;
 };
 
-
 /**
  * Find route object that matches the given path
  *

@@ -9,7 +9,7 @@ const {
   getPageContextData,
   getTemplateBasename,
   addI18nRoutesMappings,
-  shouldCreateLocalisedPage
+  shouldCreateLocalisedPage,
 } = require("./utils-plugin");
 
 const getPageComponent = ({ options, node }) => {

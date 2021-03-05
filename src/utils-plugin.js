@@ -4,7 +4,11 @@ const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 const { getOptions } = require("./options");
-const { normaliseUrlPath, normaliseRouteId, findRouteForPath } = require("./utils");
+const {
+  normaliseUrlPath,
+  normaliseRouteId,
+  findRouteForPath,
+} = require("./utils");
 
 /**
  * @typedef {ReturnType<import("./options").getOptions>} Options
@@ -277,7 +281,7 @@ const getFileSlug = ({ dir, name }) => {
 };
 
 /**
- * 
+ *
  * @param {Options} options
  * @param {ReturnType<typeof extractFileParts>} file
  */
@@ -387,9 +391,7 @@ const onCreatePage = ({ page, actions }) => {
     if (shouldCreateUnlocalisedPage(options)) {
       createPage(getPage(options, page, null, "404", "404"));
       routesMap[routeId] = routesMap[routeId] || {};
-      routesMap[routeId][options.defaultLocale] = normaliseUrlPath(
-        page.path
-      );
+      routesMap[routeId][options.defaultLocale] = normaliseUrlPath(page.path);
     } else {
       // just always output a translations ready 404.html page with all the i18n
       // page context, some hosting needs it
@@ -401,7 +403,7 @@ const onCreatePage = ({ page, actions }) => {
         isPermanent: true,
       });
     }
-    
+
     locales.forEach((locale) => {
       // FIXME: last argument`matchPath` should be "*" ?
       if (shouldCreateLocalisedPage(options, locale)) {
@@ -475,9 +477,9 @@ const onCreatePage = ({ page, actions }) => {
 };
 
 /**
- * 
- * @param {Options} options 
- * @param {string} [locale] 
+ *
+ * @param {Options} options
+ * @param {string} [locale]
  */
 const shouldCreateUnlocalisedPage = (options, locale) => {
   locale = locale || options.defaultLocale;
@@ -486,19 +488,19 @@ const shouldCreateUnlocalisedPage = (options, locale) => {
     return true;
   }
   return false;
-}
+};
 
 /**
- * 
- * @param {Options} options 
- * @param {string} locale 
+ *
+ * @param {Options} options
+ * @param {string} locale
  */
 const shouldCreateLocalisedPage = (options, locale) => {
   if (locale === options.defaultLocale && options.hideDefaultLocaleInUrl) {
     return false;
   }
   return true;
-}
+};
 
 /**
  *
@@ -545,5 +547,5 @@ module.exports = {
   ensureLocalisedMessagesFiles,
   onCreatePage,
   shouldCreateUnlocalisedPage,
-  shouldCreateLocalisedPage
+  shouldCreateLocalisedPage,
 };
