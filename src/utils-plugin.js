@@ -44,7 +44,7 @@ const getI18nRoutesMap = () => {
   let routesMap = {};
 
   try {
-    routesMap = require(getRoutesPath());
+    routesMap = JSON.parse(fs.readFileSync(getRoutesPath(), "utf-8"));
   } catch (e) {
     logger("warn", `Failed to read file ${getRoutesPath()}`);
   }
