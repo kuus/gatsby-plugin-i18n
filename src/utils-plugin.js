@@ -369,6 +369,7 @@ const onCreatePage = ({ page, actions }) => {
   if (page.path.endsWith(`/${templateBasename}/`)) {
     // console.log(`"onCreatePage" page template "${templateBasename}" deleted`);
     deletePage(oldPage);
+    // createPage(page);
   } else if (page.path.match(/dev-404/)) {
     // console.log(`"onCreatePage" matched dev-404: ${page.path}`);
     createPage(page);
@@ -376,24 +377,24 @@ const onCreatePage = ({ page, actions }) => {
     // console.log(`"onCreatePage" matched 404.html: ${page.path}`);
     deletePage(oldPage);
     createPage(getPage(options, page, null, "404.html", "404.html"));
-    // locales.forEach((locale) => {
-    //   // FIXME: last argument`matchPath` should be "*" ?
-    //   createPage(getPage(options, page, locale, "404.html"));
-    // });
   } else if (page.path === "/404/") {
     // console.log(`"onCreatePage" matched 404: ${page.path}`);
     deletePage(oldPage);
 
     const routesMap = /** @type {RoutesMap} */ ({});
     const routeId = normaliseRouteId(page.path);
-    
-    if (sholdCreateUnlocalisedPage(options)) {
+
+    if (shouldCreateUnlocalisedPage(options)) {
       createPage(getPage(options, page, null, "404", "404"));
       routesMap[routeId] = routesMap[routeId] || {};
       routesMap[routeId][options.defaultLocale] = normaliseUrlPath(
         page.path
       );
     } else {
+      // just always output a translations ready 404.html page with all the i18n
+      // page context, some hosting needs it
+      createPage(getPage(options, page, null, "404.html", "404.html"));
+
       createRedirect({
         fromPath: page.path,
         toPath: normaliseUrlPath(`/${options.defaultLocale}/${page.path}`),
@@ -403,7 +404,7 @@ const onCreatePage = ({ page, actions }) => {
     
     locales.forEach((locale) => {
       // FIXME: last argument`matchPath` should be "*" ?
-      if (sholdCreateLocalisedPage(options, locale)) {
+      if (shouldCreateLocalisedPage(options, locale)) {
         createPage(getPage(options, page, locale, "404"));
         routesMap[routeId] = routesMap[routeId] || {};
         routesMap[routeId][locale] = normaliseUrlPath(`/${locale}/404`);
@@ -444,7 +445,7 @@ const onCreatePage = ({ page, actions }) => {
         deletePage(oldPage);
 
         // then produce the localised pages according to the current i18n options
-        if (sholdCreateUnlocalisedPage(options)) {
+        if (shouldCreateUnlocalisedPage(options)) {
           createPage(getPage(options, page, null, page.path));
           routesMap[routeId] = routesMap[routeId] || {};
           routesMap[routeId][options.defaultLocale] = normaliseUrlPath(
@@ -459,7 +460,7 @@ const onCreatePage = ({ page, actions }) => {
         }
 
         locales.forEach((locale) => {
-          if (sholdCreateLocalisedPage(options, locale)) {
+          if (shouldCreateLocalisedPage(options, locale)) {
             routesMap[routeId] = routesMap[routeId] || {};
             routesMap[routeId][locale] = normaliseUrlPath(
               `/${locale}/${page.path}`
@@ -478,7 +479,7 @@ const onCreatePage = ({ page, actions }) => {
  * @param {Options} options 
  * @param {string} [locale] 
  */
-const sholdCreateUnlocalisedPage = (options, locale) => {
+const shouldCreateUnlocalisedPage = (options, locale) => {
   locale = locale || options.defaultLocale;
 
   if (locale === options.defaultLocale && options.hideDefaultLocaleInUrl) {
@@ -492,7 +493,7 @@ const sholdCreateUnlocalisedPage = (options, locale) => {
  * @param {Options} options 
  * @param {string} locale 
  */
-const sholdCreateLocalisedPage = (options, locale) => {
+const shouldCreateLocalisedPage = (options, locale) => {
   if (locale === options.defaultLocale && options.hideDefaultLocaleInUrl) {
     return false;
   }
@@ -543,4 +544,6 @@ module.exports = {
   findRouteForPath,
   ensureLocalisedMessagesFiles,
   onCreatePage,
+  shouldCreateUnlocalisedPage,
+  shouldCreateLocalisedPage
 };

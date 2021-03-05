@@ -9,6 +9,7 @@ const {
   getPageContextData,
   getTemplateBasename,
   addI18nRoutesMappings,
+  shouldCreateLocalisedPage
 } = require("./utils-plugin");
 
 const getPageComponent = ({ options, node }) => {
@@ -118,7 +119,12 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     const { slug, locale, route: routeId } = edge.node.fields;
     // console.log(`slug: ${slug}, locale: ${locale}, route: ${route}`);
     routesMap[routeId] = routesMap[routeId] || {};
-    routesMap[routeId][locale] = normaliseUrlPath(`/${locale}/${slug}`);
+    // FIXME: here we should take into account the hideDefaultLocaleInURl option
+    if (shouldCreateLocalisedPage(options, locale)) {
+      routesMap[routeId][locale] = normaliseUrlPath(`/${locale}/${slug}`);
+    } else {
+      routesMap[routeId][locale] = normaliseUrlPath(`/${slug}`);
+    }
   });
 
   // add fallback page for untraslated routes
@@ -138,7 +144,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
           // create path and add the "untranslated" route to the route map too
           const routeDefaultPath = routeData[options.defaultLocale];
           // if it ixists use the route's path assigned to the default locale,
-          // otheriwse use as path the route key preceded by the current locale
+          // otheriwse use as path the route id preceded by the current locale
           let path = routeDefaultPath
             ? routeDefaultPath.replace(options.defaultLocale, locale)
             : `${locale}/${routeId}`;
@@ -174,7 +180,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
       id,
       fields: { route: routeId, slug, locale },
     } = node;
-    let path = normaliseUrlPath(`/${locale}/${slug}`);
+    const path = normaliseUrlPath(`/${locale}/${slug}`);
     const component = getPageComponent({ options, node });
     const context = { id, route: routeId, slug, locale };
 
