@@ -124,9 +124,12 @@ const WrapPageElement = ({ element, props }, pluginOptions) => {
     if (options.debug) {
       if (!props.location) {
         logger("info", "No 'location' in WrapPageElement props", props);
-      }
-      else if (!i18n) {
-        logger("info", "No 'i18n' in WrapPageElement props", props.location.pathname);
+      } else if (!i18n) {
+        logger(
+          "info",
+          "No 'i18n' in WrapPageElement props",
+          props.location.pathname
+        );
       }
     }
     return element;

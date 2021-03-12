@@ -6,7 +6,7 @@
  * @param {"log" | "info" | "error" | "warn"} type Console method
  * @param {string} msg Log message
  */
- const logger = (type = "log", msg) => {
+const logger = (type = "log", msg) => {
   console[type](`gatsby-i18n: ${msg}`);
 };
 
