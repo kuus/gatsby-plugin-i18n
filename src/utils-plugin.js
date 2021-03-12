@@ -5,6 +5,7 @@ const path = require("path");
 const yaml = require("js-yaml");
 const { getOptions } = require("./options");
 const {
+  logger,
   normaliseUrlPath,
   normaliseRouteId,
   findRouteForPath,
@@ -15,16 +16,6 @@ const {
  *
  * @typedef {{ [key: string]: { [key: string]: string } }} RoutesMap
  */
-
-/**
- * Internal logger
- *
- * @param {"log" | "info" | "error" | "warn"} type Console method
- * @param {string} msg Log message
- */
-const logger = (type = "log", msg) => {
-  console[type](`gatsby-i18n: ${msg}`);
-};
 
 const getRoutesPath = () => {
   return `${__dirname}/.routes.json`;
@@ -309,7 +300,7 @@ const getFileLocale = (options, file) => {
  * It checks that the given file path is within the `pathContent` defined in the
  * plugin options and that it is not a template
  *
- * @param {{ pathContent: string|Array<string>; templateName: string }}
+ * @param {{ pathContent: string|Array<string>; templateName: string }} file
  * @param {string} filePath
  * @returns {boolean}
  */
@@ -534,7 +525,6 @@ const getPage = (options, page, locale, path, matchPath) => {
 };
 
 module.exports = {
-  logger,
   cleanI18nRoutesMap,
   addI18nRoutesMappings,
   writeI18nOptions,

@@ -38,7 +38,7 @@ const Link = React.forwardRef(
           }
         };
 
-        // TODO: add optional parameters to the detination URL
+        // TODO: add optional parameters to the destination URL
         if (params) {
           let idx = 1;
           let paramsQuantity = Object.keys(params).length;

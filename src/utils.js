@@ -1,6 +1,16 @@
 // @ts-check
 
 /**
+ * Internal logger
+ *
+ * @param {"log" | "info" | "error" | "warn"} type Console method
+ * @param {string} msg Log message
+ */
+ const logger = (type = "log", msg) => {
+  console[type](`gatsby-i18n: ${msg}`);
+};
+
+/**
  * Normalise URL path
  *
  * Always add a slash at the begininng and enforce the trailing slash.
@@ -20,13 +30,13 @@ const normaliseUrlPath = (input) => {
  * 
  * TODO: decide whether to have e.g.
  * "parent-page" instead of "/parent/page":
- * let route = name === "index" ? dir : dir + "-" + name;
  * route = route.replace(/\//g, "-").replace(/^-/, "");
  * return route || "index";
 
  * @param {string} input 
  */
 const normaliseRouteId = (input) => {
+  // input = input.replace("pages", "");
   input = normaliseUrlPath(`/${input}/`);
   return input;
 };
@@ -55,6 +65,7 @@ const findRouteForPath = (routes, path) => {
 };
 
 module.exports = {
+  logger,
   normaliseUrlPath,
   normaliseRouteId,
   findRouteForPath,

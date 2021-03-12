@@ -3,8 +3,8 @@
 const nodePath = require("path");
 const fs = require("fs");
 const { getOptions } = require("./options");
+const { logger } = require("./utils");
 const {
-  logger,
   normaliseUrlPath,
   getPageContextData,
   getTemplateBasename,
@@ -88,7 +88,11 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
           }
         }
       }
-      allMarkdown: ${options.useMdx ? "allMdx" : "allMarkdownRemark"} {
+      allMarkdown: ${options.useMdx ? "allMdx" : "allMarkdownRemark"}(
+        filter: {
+          frontmatter: { template: { ne: null } }
+        }
+      ) {
         edges {
           node {
             id

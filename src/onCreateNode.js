@@ -1,9 +1,9 @@
 const { getOptions } = require("./options");
+const { logger } = require("./utils");
 const {
   extractFromPath,
   normaliseUrlPath,
   isFileToLocalise,
-  logger,
 } = require("./utils-plugin");
 
 const onCreateNode = ({ node, actions }, pluginOptions) => {

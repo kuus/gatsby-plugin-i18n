@@ -4,6 +4,7 @@ import React from "react";
 import { IntlProvider } from "react-intl";
 import { IntlContextProvider } from "./IntlContext";
 import { getOptions } from "./options";
+import { logger } from "./utils";
 import Helmet from "react-helmet";
 import { findRouteForPath } from "./utils";
 import i18nRoutes from "./.routes.json";
@@ -120,7 +121,14 @@ const WrapPageElement = ({ element, props }, pluginOptions) => {
   const options = getOptions(pluginOptions);
 
   if (!i18n || !props.location) {
-    console.warn("No i18n or no location in WrapPageElement prop", props);
+    if (options.debug) {
+      if (!props.location) {
+        logger("info", "No 'location' in WrapPageElement props", props);
+      }
+      else if (!i18n) {
+        logger("info", "No 'i18n' in WrapPageElement props", props.location.pathname);
+      }
+    }
     return element;
   }
 

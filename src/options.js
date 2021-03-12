@@ -8,7 +8,7 @@ const defaultOptions = {
   enforceLocalisedUrls: true,
   hideDefaultLocaleInUrl: false,
   pathData: "src/content/settings/i18n",
-  pathContent: [/* "src/pages",  */ "src/content"], // TODO: docs, the order matters..
+  pathContent: ["src/content"],
   excludePaths: ["admin"],
   redirect: true,
   redirectComponent: null,
