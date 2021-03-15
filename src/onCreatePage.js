@@ -50,9 +50,10 @@ module.exports.onCreatePage = ({ page, actions }) => {
   } else if (page.path.endsWith("404.html")) {
     // console.log(`"onCreatePage" matched 404.html: ${page.path}`);
     deletePage(oldPage);
-    // don't use the 404.html page, with netlify it is not needed, we use
-    // localised pages in the condition below
-    // createPage(getPage(options, page, null, "404.html"));
+    // create a 404.html fallback page with default language, anyway with netlify
+    // redirects the a localised version of the 404 page with a pretty URL should
+    // be used by the condition here below
+    createPage(getPage(options, page, options.defaultLocale, "404.html"));
   } else if (page.path === "/404/") {
     // console.log(`"onCreatePage" matched 404: ${page.path}`);
     deletePage(oldPage);
@@ -62,7 +63,7 @@ module.exports.onCreatePage = ({ page, actions }) => {
 
     locales.forEach((locale) => {
       const withLocale = normaliseUrlPath(`/${locale}/404`);
-      const withoutLocale = normaliseUrlPath(`/404`);
+      const withoutLocale = normaliseUrlPath("/404");
       const visibleLocale = shouldCreateLocalisedPage(options, locale);
       const path = visibleLocale ? withLocale : withoutLocale;
 
@@ -84,7 +85,7 @@ module.exports.onCreatePage = ({ page, actions }) => {
       // https://docs.netlify.com/routing/redirects/redirect-options/#custom-404-page-handling
       createRedirect({
         fromPath: visibleLocale ? `/${locale}/*` : "/*",
-        toPath: visibleLocale ? `/${locale}/404/` : "/404",
+        toPath: visibleLocale ? `/${locale}/404/index.html` : "/404/index.html",
         statusCode: 404,
       });
     });
