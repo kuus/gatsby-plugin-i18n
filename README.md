@@ -1,5 +1,9 @@
 # Gatsby plugin i18n
 
+## Resources
+
+- [Netlify redirects adn localization](https://docs.netlify.com/routing/redirects/redirect-options/#redirect-by-country-or-language)
+
 ## Similar projects
 
 - [gatsby-plugin-intl](https://github.com/wiziple/gatsby-plugin-intl)

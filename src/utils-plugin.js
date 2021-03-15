@@ -169,10 +169,10 @@ const ensureLocalisedMessagesFiles = (pluginOptions) => {
 /**
  * Get gatsby's page context data
  *
- * @param {{ options: Options; locale: string; routed?: boolean }} args
+ * @param {{ options: Options; locale: string; }} args
  * @param {object} additional
  */
-const getPageContextData = ({ options, locale, routed }, additional = {}) => {
+const getPageContextData = ({ options, locale }, additional = {}) => {
   const { locales, defaultLocale } = options || getI18nOptions();
   locale = locale || defaultLocale;
   const messagesPath = ensureLocalisedMessagesFile(options, locale);
@@ -183,7 +183,6 @@ const getPageContextData = ({ options, locale, routed }, additional = {}) => {
       locales,
       defaultLocale,
       currentLocale: locale,
-      routed,
       messages,
       ...additional,
     },
@@ -334,151 +333,17 @@ const isFileToLocalise = ({ pathContent, templateName }, filePath) => {
   return isInContentPath && fileBasename !== templateName;
 };
 
+/**
+ * Get template basename stripping out allowed extensions
+ *
+ * @param {string} name
+ * @returns {string}
+ */
 const getTemplateBasename = (name) => {
   name = path.basename(name, ".js");
   name = path.basename(name, ".jsx");
   name = path.basename(name, ".tsx");
   return name;
-};
-
-/**
- * Here we should create tha same context that we do on `createPages`, it would
- * be better to just create it once here but there is an issue with gatsby that
- * programmatically created pages do not trigger the `onCreatePage` hook,
- * @see https://github.com/gatsbyjs/gatsby/issues/5255
- *
- * The Gatsby docs says in fact: "There is a mechanism in Gatsby to prevent
- * calling onCreatePage for pages created by the same gatsby-node.js to avoid
- * infinite loops/callback."
- *
- * @see https://www.gatsbyjs.com/docs/reference/config-files/gatsby-node/#onCreatePage
- */
-const onCreatePage = ({ page, actions }) => {
-  const { createPage, createRedirect, deletePage } = actions;
-  const options = getI18nOptions();
-  const { locales, templateName, excludePaths } = options;
-  const normalisedExcludedPaths = excludePaths.map(normaliseUrlPath);
-  const oldPage = { ...page };
-  const templateBasename = getTemplateBasename(templateName);
-
-  if (page.path.endsWith(`/${templateBasename}/`)) {
-    // console.log(`"onCreatePage" page template "${templateBasename}" deleted`);
-    deletePage(oldPage);
-    // createPage(page);
-  } else if (page.path.match(/dev-404/)) {
-    // console.log(`"onCreatePage" matched dev-404: ${page.path}`);
-    createPage(page);
-  } else if (page.path === "/404.html") {
-    // console.log(`"onCreatePage" matched 404.html: ${page.path}`);
-    deletePage(oldPage);
-    createPage(getPage(options, page, null, "404.html", "404.html"));
-  } else if (page.path === "/404/") {
-    // console.log(`"onCreatePage" matched 404: ${page.path}`);
-    deletePage(oldPage);
-
-    const routesMap = /** @type {RoutesMap} */ ({});
-    const routeId = normaliseRouteId(page.path);
-
-    if (shouldCreateUnlocalisedPage(options)) {
-      createPage(getPage(options, page, null, "404", "404"));
-      routesMap[routeId] = routesMap[routeId] || {};
-      routesMap[routeId][options.defaultLocale] = normaliseUrlPath(page.path);
-    } else {
-      // just always output a translations ready 404.html page with all the i18n
-      // page context, some hosting needs it
-      createPage(getPage(options, page, null, "404.html", "404.html"));
-
-      createRedirect({
-        fromPath: page.path,
-        toPath: normaliseUrlPath(`/${options.defaultLocale}/${page.path}`),
-        isPermanent: true,
-      });
-    }
-
-    locales.forEach((locale) => {
-      // FIXME: last argument`matchPath` should be "*" ?
-      if (shouldCreateLocalisedPage(options, locale)) {
-        createPage(getPage(options, page, locale, "404"));
-        routesMap[routeId] = routesMap[routeId] || {};
-        routesMap[routeId][locale] = normaliseUrlPath(`/${locale}/404`);
-      }
-    });
-
-    addI18nRoutesMappings(routesMap);
-  } else {
-    // add routes only for pages that loosely placed as `.js/.tsx` files in
-    // `src/pages`. For these pages we automatically create the needed localised
-    // urls keeping the same slug as the file name (which is what Gatsby uses
-    // by default) and the localisation is delegated to the project creator who
-    // should use the injectIntl HOC and define the translations in the
-    // `src/content/settings/i18n/$locale.yml` files.
-    // For the pages not created this way but instead programmatically created
-    // in the `createPages` of your project you need instead to manually
-    // create the route object and add it through `gatsby-i18n` API
-    // `addI18nRoutesMappings`.
-    if (page.isCreatedByStatefulCreatePages) {
-      if (normalisedExcludedPaths.includes(page.path)) {
-        if (options.debug) {
-          logger(
-            "info",
-            `"onCreatePage" matched path to exclude from localisation: ${page.path}`
-          );
-        }
-      } else {
-        if (options.debug) {
-          logger(
-            "info",
-            `Page "${page.path}" is deleted in the hook "onCreatePage" and localised`
-          );
-        }
-        const routesMap = /** @type {RoutesMap} */ ({});
-        const routeId = normaliseRouteId(page.path);
-
-        // first always delete
-        deletePage(oldPage);
-
-        // then produce the localised pages according to the current i18n options
-        if (shouldCreateUnlocalisedPage(options)) {
-          createPage(getPage(options, page, null, page.path));
-          routesMap[routeId] = routesMap[routeId] || {};
-          routesMap[routeId][options.defaultLocale] = normaliseUrlPath(
-            page.path
-          );
-        } else {
-          createRedirect({
-            fromPath: page.path,
-            toPath: normaliseUrlPath(`/${options.defaultLocale}/${page.path}`),
-            isPermanent: true,
-          });
-        }
-
-        locales.forEach((locale) => {
-          if (shouldCreateLocalisedPage(options, locale)) {
-            routesMap[routeId] = routesMap[routeId] || {};
-            routesMap[routeId][locale] = normaliseUrlPath(
-              `/${locale}/${page.path}`
-            );
-            createPage(getPage(options, page, locale, page.path));
-          }
-        });
-        addI18nRoutesMappings(routesMap);
-      }
-    }
-  }
-};
-
-/**
- *
- * @param {Options} options
- * @param {string} [locale]
- */
-const shouldCreateUnlocalisedPage = (options, locale) => {
-  locale = locale || options.defaultLocale;
-
-  if (locale === options.defaultLocale && options.hideDefaultLocaleInUrl) {
-    return true;
-  }
-  return false;
 };
 
 /**
@@ -494,7 +359,7 @@ const shouldCreateLocalisedPage = (options, locale) => {
 };
 
 /**
- *
+ * FIXME: clean up matchPath
  * @param {Options} options
  * @param {any} page
  * @param {string} [locale]
@@ -502,24 +367,26 @@ const shouldCreateLocalisedPage = (options, locale) => {
  * @param {string} [matchPath]
  */
 const getPage = (options, page, locale, path, matchPath) => {
-  const hasWildcard = matchPath ? matchPath.indexOf("*") >= 0 : false;
+  // const hasWildcard = matchPath ? matchPath.indexOf("*") >= 0 : false;
   const data = {
     ...page,
+    path,
+    matchPath: path,
+    // FIXME: check what we actually need to pass to context
     context: {
       ...page.context,
-      ...getPageContextData({ options, locale, routed: !!locale }),
+      locale,
+      ...getPageContextData({ options, locale }),
     },
   };
-  path = locale ? `/${locale}/${path}` : `/${path}`;
-  data.path = normaliseUrlPath(path);
 
-  if (matchPath) {
-    matchPath = locale ? `/${locale}/${matchPath}` : `/${matchPath}`;
-    // don't add trailing slash to 404 wildcard match path, otherwise we would
-    // have the following matchPath value: `/en/*/`
-    matchPath = hasWildcard ? matchPath : normaliseUrlPath(matchPath);
-    data.matchPath = matchPath;
-  }
+  // if (matchPath) {
+  //   matchPath = locale ? `/${locale}/${matchPath}` : `/${matchPath}`;
+  //   // don't add trailing slash to 404 wildcard match path, otherwise we would
+  //   // have the following matchPath value: `/en/*/`
+  //   matchPath = hasWildcard ? matchPath : normaliseUrlPath(matchPath);
+  //   data.matchPath = matchPath;
+  // }
 
   return data;
 };
@@ -535,7 +402,7 @@ module.exports = {
   normaliseUrlPath,
   findRouteForPath,
   ensureLocalisedMessagesFiles,
-  onCreatePage,
-  shouldCreateUnlocalisedPage,
+  getI18nOptions,
   shouldCreateLocalisedPage,
+  getPage,
 };

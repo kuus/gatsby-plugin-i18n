@@ -52,6 +52,7 @@ const findRouteForPath = (routes, path) => {
   for (const routeKey in routes) {
     const route = routes[routeKey];
     for (const routeLocale in route) {
+      // FIXME: check this triple condition, only the second should be enough
       if (
         routeKey === normalisedPath ||
         route[routeLocale] === normalisedPath ||

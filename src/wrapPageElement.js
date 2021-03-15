@@ -74,28 +74,31 @@ function getCurrentLocaleFromURL(pathname, locales) {
  * the first one is considered the canonical URL, hence in the latter URL we
  * add `<link rel="canonical" href="https://mysite.com/it/chi-siamo" />`
  * @see https://support.google.com/webmasters/answer/139066#methods
+ * FIXME: this should be necessary only when not using `createRedirect`, now we
+ * always using it, so there are no duplicated pages, I'll leave the code here
+ * commented for a bit
  *
  * About alternate meta tags:
  * @see https://support.google.com/webmasters/answer/189077
  */
 const I18nSEO = ({ i18n, location, options }) => {
-  const { currentLocale, defaultLocale, locales } = i18n;
+  const { currentLocale, /* defaultLocale, */ locales } = i18n;
   const route = findRouteForPath(i18nRoutes, location.pathname);
   const baseUrl = options.baseUrl;
-  const currentLocaleInUrl = getCurrentLocaleFromURL(
-    location.pathname,
-    locales
-  );
+  // const currentLocaleInUrl = getCurrentLocaleFromURL(
+  //   location.pathname,
+  //   locales
+  // );
 
   if (!route) {
     return <Helmet htmlAttributes={{ lang: currentLocale }} />;
   }
-  const canonicalUrl = baseUrl + route[defaultLocale];
-  const showCanonical = currentLocale === defaultLocale || !currentLocaleInUrl;
+  // const canonicalUrl = baseUrl + route[defaultLocale];
+  // const showCanonical = currentLocale === defaultLocale || !currentLocaleInUrl;
 
   return (
     <Helmet htmlAttributes={{ lang: currentLocale }}>
-      {showCanonical && <link rel="canonical" href={canonicalUrl} />}
+      {/* {showCanonical && <link rel="canonical" href={canonicalUrl} />} */}
       {locales.map((locale) =>
         !!route[locale] ? (
           <link
