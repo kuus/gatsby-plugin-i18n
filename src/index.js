@@ -6,5 +6,6 @@ export {
   getCurrentRoute,
 } from "./link";
 export { normaliseUrlPath, findRouteForPath } from "./utils";
-export { IntlContextConsumer } from //useI18n
-"./IntlContext";
+export {
+  IntlContextConsumer, //useI18n
+} from "./IntlContext";

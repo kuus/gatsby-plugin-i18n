@@ -26,3 +26,4 @@ exports.onCreateWebpackConfig = ({ actions, plugins }, pluginOptions) => {
 exports.onPreBootstrap = require("./onPreBootstrap");
 exports.onCreateNode = require("./onCreateNode");
 exports.createPages = require("./createPages");
+exports.onPostBootstrap = require("./onPostBootstrap");
