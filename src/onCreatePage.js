@@ -75,7 +75,7 @@ module.exports.onCreatePage = ({ page, actions }) => {
           options,
           page,
           locale,
-          path,
+          path
           // visibleLocale ? `/${locale}/*` : "/*"
         )
       );
@@ -85,6 +85,7 @@ module.exports.onCreatePage = ({ page, actions }) => {
           fromPath: visibleLocale ? withoutLocale : withLocale,
           toPath: visibleLocale ? withLocale : withoutLocale,
           isPermanent: true,
+          force: true
         });
       }
 
@@ -151,6 +152,7 @@ module.exports.onCreatePage = ({ page, actions }) => {
               fromPath: visibleLocale ? withoutLocale : withLocale,
               toPath: visibleLocale ? withLocale : withoutLocale,
               isPermanent: true,
+              force: true
             });
           }
         });

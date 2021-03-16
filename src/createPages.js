@@ -207,6 +207,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
         fromPath: visibleLocale ? withoutLocale : withLocale,
         toPath: visibleLocale ? withLocale : withoutLocale,
         isPermanent: true,
+        force: true
       });
     }
   });
