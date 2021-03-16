@@ -14,10 +14,10 @@ const onPreBootstrap = ({ actions }, pluginOptions) => {
 
   const { createRedirect } = actions;
   const options = getOptions(pluginOptions);
-  
+
   options.locales.forEach((locale) => {
     const visibleLocale = shouldCreateLocalisedPage(options, locale);
-    
+
     // create root redirects for netlify, create these here onPreBootstrap as
     // netlify redirects priority is top to bottom, what is read first acts
     // first @see https://bit.ly/3ePMNYC

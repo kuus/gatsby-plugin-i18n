@@ -6,9 +6,14 @@ This plugin is meant to be used with netlify and its [gatsby-plugin-netlify](htt
 
 - [Netlify redirects adn localization](https://docs.netlify.com/routing/redirects/redirect-options/#redirect-by-country-or-language)
 - [Gatsby netlify plugin](https://github.com/gatsbyjs/gatsby/tree/master/packages/gatsby-plugin-netlify#redirects)
-- [Gatsby 404 localised 404 pages](https://www.gatsbyjs.com/docs/creating-prefixed-404-pages-for-different-languages/)
 - Examples of internationalised Gatsby sites:
   - [overreacted.io](https://github.com/gaearon/overreacted.io/blob/master/gatsby-node.js) We might get from there the mechanism that scan the markdown files and auto-localise links.
+- Articles:
+  - [Building i18n with Gatsby](https://www.gatsbyjs.org/blog/2017-10-17-building-i18n-with-gatsby/)
+  - [Building a multilingual static site with Gatsby](https://hiddentao.com/archives/2019/05/07/building-a-multilingual-static-site-with-gatsby)
+- About 404:
+  - [Gatsby 404 localised 404 pages](https://www.gatsbyjs.com/docs/creating-prefixed-404-pages-for-different-languages/)
+  - [Creating prefixed 404 pages for different locales](https://www.gatsbyjs.org/docs/creating-prefixed-404-pages-for-different-locales/)
 
 ## Similar projects
 
@@ -22,21 +27,15 @@ There are [many on `npm`](https://www.npmjs.com/search?q=gatsby%20i18n).
 - [gatsby-theme-i18n](https://github.com/gatsbyjs/themes/tree/master/packages/gatsby-theme-i18n)
 - [gatsby-plugin-translate-urls](https://www.npmjs.com/package/gatsby-plugin-translate-urls)
 
-## Links
-
-- https://www.gatsbyjs.org/blog/2017-10-17-building-i18n-with-gatsby/
-- https://hiddentao.com/archives/2019/05/07/building-a-multilingual-static-site-with-gatsby
-- https://react.i18next.com/latest/i18nextprovider
-- About 404:
-  - https://www.gatsbyjs.org/docs/creating-prefixed-404-pages-for-different-locales/
-  - https://github.com/wiziple/gatsby-plugin-intl/blob/master/src/gatsby-node.js#L51-L55
-  - https://www.gatsbyjs.org/packages/gatsby-plugin-netlify/
-
 ## Issues
+
+### Language based redirects
+
+Those that use `Language: locale` in the `createRedirect` method, they seem to do not work at the moment, see [this issue](https://answers.netlify.com/t/language-specific-redirect-not-working/9221/4) or [this one](https://answers.netlify.com/t/language-based-redirect-only-works-when-1-browser-language-set/4252/19) for instance.
 
 ### Trailing slashes
 
-Netlify when loading a page directly or refreshing the browser when you are on a page without a trailing slash it will redirect to the same url with a trailing slash, this happens even with `Pretty URLS` setting disabled on Netlify panel. See [this issue](https://github.com/gatsbyjs/gatsby/issues/9207). Until this issue with netlify is not solved we set by default trailing slashed on all paths.
+Netlify when loading a page directly or refreshing the browser when you are on a page without a trailing slash it will redirect to the same url with a trailing slash, this happens even with `Pretty URLS` setting disabled on Netlify panel. See [this issue](https://github.com/gatsbyjs/gatsby/issues/9207). Until this issue with netlify is not solved we set by default trailing slashed on all paths with the util `normaliseUrlPath`.
 
 ### Custom slugs
 
