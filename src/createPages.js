@@ -203,11 +203,11 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     // always create redirects for the default locale either one way or the
     // other (with->without or without->with)
     if (locale === options.defaultLocale) {
-      createRedirect({
-        fromPath: visibleLocale ? withoutLocale : withLocale,
-        toPath: visibleLocale ? withLocale : withoutLocale,
-        isPermanent: true,
-      });
+      // createRedirect({
+      //   fromPath: visibleLocale ? withoutLocale : withLocale,
+      //   toPath: visibleLocale ? withLocale : withoutLocale,
+      //   isPermanent: true,
+      // });
     }
   });
 
