@@ -2,7 +2,7 @@
 
 import React from "react";
 import { IntlProvider } from "react-intl";
-import { IntlContextProvider } from "./IntlContext";
+import { I18nProvider } from "./I18nContext";
 import { getOptions } from "./options";
 import { logger } from "./utils";
 import Helmet from "react-helmet";
@@ -26,8 +26,8 @@ const polyfillIntl = (locale) => {
   // }
 };
 
-const withIntlProvider = (i18n) => (children) => {
-  polyfillIntl(i18n.currentLocale);
+const withI18nProviders = (i18n) => (children) => {
+  // polyfillIntl(i18n.currentLocale);
 
   return (
     <IntlProvider
@@ -35,7 +35,7 @@ const withIntlProvider = (i18n) => (children) => {
       defaultLocale={i18n.defaultLocale}
       messages={i18n.messages}
     >
-      <IntlContextProvider value={i18n}>{children}</IntlContextProvider>
+      <I18nProvider value={i18n}>{children}</I18nProvider>
     </IntlProvider>
   );
 };
@@ -99,18 +99,20 @@ const I18nSEO = ({ i18n, location, options }) => {
   return (
     <Helmet htmlAttributes={{ lang: currentLocale }}>
       {/* {showCanonical && <link rel="canonical" href={canonicalUrl} />} */}
-      {locales.map((locale) =>
-        !!route[locale] ? (
-          <link
-            rel="alternate"
-            href={baseUrl + route[locale]}
-            hrefLang={locale}
-            key={locale}
-          />
-        ) : (
-          ""
-        )
-      )}
+      {locales
+        .filter((locale) => locale !== currentLocale)
+        .map((locale) =>
+          !!route[locale] ? (
+            <link
+              rel="alternate"
+              href={baseUrl + route[locale]}
+              hrefLang={locale}
+              key={locale}
+            />
+          ) : (
+            ""
+          )
+        )}
     </Helmet>
   );
 };
@@ -123,18 +125,17 @@ const WrapPageElement = ({ element, props }, pluginOptions) => {
   const { i18n } = props.pageContext;
   const options = getOptions(pluginOptions);
 
-  if (!i18n || !props.location) {
+  if (!i18n /*  || !props.location */) {
     if (options.debug) {
-      if (!props.location) {
-        logger("info", "No 'location' in WrapPageElement props", props);
-      } else if (!i18n) {
-        logger(
-          "info",
-          "No 'i18n' in WrapPageElement props",
-          props.location.pathname
-        );
-      }
+      // if (!props.location) {
+      //   logger("info", "No 'location' in WrapPageElement props");
+      // } else if (!i18n) {
+      logger(
+        "info",
+        `No 'i18n' in WrapPageElement props ${props.location.pathname}`
+      );
     }
+    // }
     return element;
   }
 
@@ -149,7 +150,7 @@ const WrapPageElement = ({ element, props }, pluginOptions) => {
     </>
   );
 
-  return withIntlProvider(i18n)(renderElementWithSeo);
+  return withI18nProviders(i18n)(renderElementWithSeo);
 };
 
 export default WrapPageElement;

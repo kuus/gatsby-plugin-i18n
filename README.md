@@ -4,6 +4,8 @@
 
 - [Netlify redirects adn localization](https://docs.netlify.com/routing/redirects/redirect-options/#redirect-by-country-or-language)
 - [Gatsby netlify plugin](https://github.com/gatsbyjs/gatsby/tree/master/packages/gatsby-plugin-netlify#redirects)
+- Examples of internationalised Gatsby sites:
+  - [overreacted.io](https://github.com/gaearon/overreacted.io/blob/master/gatsby-node.js) We might get from there the mechanism that scan the markdown files and auto-localise links.
 
 ## Similar projects
 

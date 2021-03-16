@@ -15,7 +15,7 @@ const {
 const getPageComponent = ({ options, node }) => {
   const { pathContent, templateName } = options;
   const { relativePath, frontmatter, fields } = node;
-  const { fileDir /* , slug */ } = fields;
+  const { fileDir, slug } = fields;
   const rightContentPath = Array.isArray(pathContent)
     ? pathContent[0]
     : pathContent;
@@ -35,17 +35,20 @@ const getPageComponent = ({ options, node }) => {
 
     if (!fs.existsSync(component)) {
       if (templateName) {
-        // console.log(
-        //   `You can create a file "${templateName}" in the folder` +
-        //     ` "${componentIdealDir}" instead of declaring it explicitly in the` +
-        //     ` frontmatter section of the page ${slug}.`
-        // );
+        logger("info",
+          `You can create a file "${templateName}" in the folder` +
+            ` "${componentIdealDir}" instead of declaring it explicitly in the` +
+            ` frontmatter section of the page ${slug}.`
+        );
       }
-      logger(
-        "warn",
-        `No template component found for ${node.fileAbsolutePath}`
-      );
     }
+  }
+  
+  if (!fs.existsSync(component)) {
+    logger(
+      "warn",
+      `No template component found for ${node.fileAbsolutePath}`
+    );
   }
 
   return component;
@@ -54,12 +57,7 @@ const getPageComponent = ({ options, node }) => {
 const createPages = async ({ graphql, actions }, pluginOptions) => {
   const { createPage, createRedirect } = actions;
   const options = getOptions(pluginOptions);
-  const {
-    enforceLocalisedUrls,
-    hideDefaultLocaleInUrl,
-    pathContent,
-    templateName,
-  } = options;
+  const { pathContent, templateName } = options;
 
   let rightContentPath = "";
   if (Array.isArray(pathContent)) {
@@ -206,7 +204,6 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
 
     // always create redirects for the default locale either one way or the
     // other (with->without or without->with)
-    // TODO: check that `gatsby-plugin-netlify` actually create the` `_redirects`
     if (locale === options.defaultLocale) {
       createRedirect({
         fromPath: visibleLocale ? withoutLocale : withLocale,

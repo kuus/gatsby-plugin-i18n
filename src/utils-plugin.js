@@ -359,7 +359,6 @@ const shouldCreateLocalisedPage = (options, locale) => {
 };
 
 /**
- * FIXME: clean up matchPath
  * @param {Options} options
  * @param {any} page
  * @param {string} [locale]
@@ -367,11 +366,10 @@ const shouldCreateLocalisedPage = (options, locale) => {
  * @param {string} [matchPath]
  */
 const getPage = (options, page, locale, path, matchPath) => {
-  // const hasWildcard = matchPath ? matchPath.indexOf("*") >= 0 : false;
   const data = {
     ...page,
     path,
-    matchPath: path,
+    matchPath: matchPath || path,
     // FIXME: check what we actually need to pass to context
     context: {
       ...page.context,
@@ -379,14 +377,6 @@ const getPage = (options, page, locale, path, matchPath) => {
       ...getPageContextData({ options, locale }),
     },
   };
-
-  // if (matchPath) {
-  //   matchPath = locale ? `/${locale}/${matchPath}` : `/${matchPath}`;
-  //   // don't add trailing slash to 404 wildcard match path, otherwise we would
-  //   // have the following matchPath value: `/en/*/`
-  //   matchPath = hasWildcard ? matchPath : normaliseUrlPath(matchPath);
-  //   data.matchPath = matchPath;
-  // }
 
   return data;
 };

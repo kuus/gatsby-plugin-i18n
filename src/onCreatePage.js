@@ -70,8 +70,7 @@ module.exports.onCreatePage = ({ page, actions }) => {
       routesMap[routeId] = routesMap[routeId] || {};
       routesMap[routeId][locale] = path;
 
-      // FIXME: last argument`matchPath` should be "*" ?
-      createPage(getPage(options, page, locale, path));
+      createPage(getPage(options, page, locale, path, path + "*"));
 
       if (locale === options.defaultLocale) {
         createRedirect({
@@ -96,7 +95,7 @@ module.exports.onCreatePage = ({ page, actions }) => {
     // `src/pages`. For these pages we automatically create the needed localised
     // urls keeping the same slug as the file name (which is what Gatsby uses
     // by default) and the localisation is delegated to the project creator who
-    // should use the injectIntl HOC and define the translations in the
+    // should use the useIntl hook and define the translations in the
     // `src/content/settings/i18n/$locale.yml` files.
     // For the pages not created this way but instead programmatically created
     // in the `createPages` of your project you need instead to manually

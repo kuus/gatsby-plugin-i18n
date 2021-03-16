@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Link as GatsbyLink, navigate as gatsbyNavigate } from "gatsby";
-import { IntlContextConsumer } from "./IntlContext";
+import { useI18n } from "./I18nContext";
 import { findRouteForPath, normaliseUrlPath } from "./utils";
 import i18nRoutes from "./.routes.json";
 
@@ -22,50 +22,48 @@ const getDestination = ({ i18n, to, locale }) => {
   return `${localisedTo}${window.location.search}`;
 };
 
+// const Link = ({ to, locale, children, onClick, ...restProps }) => (
 const Link = React.forwardRef(
-  ({ to, params, locale, children, onClick, ...restProps }, ref) => (
-    // const Link = ({ to, locale, children, onClick, ...restProps }) => (
-    <IntlContextConsumer>
-      {(i18n) => {
-        let destination = getDestination({ i18n, to, locale });
-        locale = locale || i18n.currentLocale;
-        const handleClick = (e) => {
-          if (locale) {
-            localStorage.setItem("gatsby-i18n-locale", locale);
-          }
-          if (onClick) {
-            onClick(e);
-          }
-        };
+  ({ to, params, locale, children, onClick, ...restProps }, ref) => {
+    const i18n = useI18n();
 
-        // TODO: add optional parameters to the destination URL
-        if (params) {
-          let idx = 1;
-          let paramsQuantity = Object.keys(params).length;
-          destination += "?";
-          for (const paramKey in params) {
-            destination += `${paramKey}=${params[paramKey]}`;
-            if (idx !== paramsQuantity) {
-              destination += "&";
-            }
-            idx++;
-          }
+    let destination = getDestination({ i18n, to, locale });
+    locale = locale || i18n.currentLocale;
+
+    const handleClick = (e) => {
+      if (locale) {
+        localStorage.setItem("gatsby-i18n-locale", locale);
+      }
+      if (onClick) {
+        onClick(e);
+      }
+    };
+
+    // TODO: add optional parameters to the destination URL
+    if (params) {
+      let idx = 1;
+      let paramsQuantity = Object.keys(params).length;
+      destination += "?";
+      for (const paramKey in params) {
+        destination += `${paramKey}=${params[paramKey]}`;
+        if (idx !== paramsQuantity) {
+          destination += "&";
         }
+        idx++;
+      }
+    }
 
-        return (
-          <GatsbyLink
-            ref={ref}
-            {...restProps}
-            to={destination}
-            onClick={handleClick}
-          >
-            {children}
-          </GatsbyLink>
-        );
-      }}
-    </IntlContextConsumer>
-    // );
-  )
+    return (
+      <GatsbyLink
+        ref={ref}
+        {...restProps}
+        to={destination}
+        onClick={handleClick}
+      >
+        {children}
+      </GatsbyLink>
+    );
+  }
 );
 
 export const navigate = (to, options) => {

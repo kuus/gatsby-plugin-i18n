@@ -1,4 +1,5 @@
-export * from "react-intl";
+// export * from "react-intl";
+export { useIntl, FormattedMessage } from "react-intl";
 export {
   default as Link,
   navigate,
@@ -6,6 +7,4 @@ export {
   getCurrentRoute,
 } from "./link";
 export { normaliseUrlPath, findRouteForPath } from "./utils";
-export {
-  IntlContextConsumer, //useI18n
-} from "./IntlContext";
+export { I18nConsumer, useI18n } from "./I18nContext";
