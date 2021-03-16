@@ -10,7 +10,7 @@ const onPreBootstrap = ({ actions }, pluginOptions) => {
   writeI18nOptions(pluginOptions);
   ensureLocalisedMessagesFiles(pluginOptions);
   cleanI18nRoutesMap();
-  
+
   const { createRedirect } = actions;
   const options = getOptions(pluginOptions);
 
@@ -29,7 +29,7 @@ const onPreBootstrap = ({ actions }, pluginOptions) => {
         fromPath: "/",
         toPath: `/${locale}/`,
         isPermanent: true,
-        Language: locale
+        Language: locale,
       };
 
       createRedirect(redirect);
