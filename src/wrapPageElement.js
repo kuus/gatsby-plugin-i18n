@@ -41,64 +41,22 @@ const withI18nProviders = (i18n) => (children) => {
 };
 
 /**
- * Get current locale from URL pathname
- *
- * it grabs the first bit of the pathname and check that that is one of the
- * available locales
- *
- * @param {string} pathname
- * @param {string[]} locales
- * @returns {string | false}
- */
-function getCurrentLocaleFromURL(pathname, locales) {
-  const parts = pathname.split("/");
-  if (parts[1]) {
-    for (let i = 0; i < locales.length; i++) {
-      if (locales[i] === parts[1]) {
-        return parts[1];
-      }
-    }
-  }
-
-  return false;
-}
-
-/**
  * Automatically manage i18n related SEO HTML tags.
- *
- * The canonical link tag is oly be added on the non-canonical url,
- * the one the duplicates the original one, for instance, having a default
- * locale set to "it" and having these two URLS:
- * "https://mysite.com/it/chi-siamo"
- * "https://mysite.com/chi-siamo"
- * the first one is considered the canonical URL, hence in the latter URL we
- * add `<link rel="canonical" href="https://mysite.com/it/chi-siamo" />`
- * @see https://support.google.com/webmasters/answer/139066#methods
- * FIXME: this should be necessary only when not using `createRedirect`, now we
- * always using it, so there are no duplicated pages, I'll leave the code here
- * commented for a bit
  *
  * About alternate meta tags:
  * @see https://support.google.com/webmasters/answer/189077
  */
 const I18nSEO = ({ i18n, location, options }) => {
-  const { currentLocale, /* defaultLocale, */ locales } = i18n;
+  const { currentLocale, locales } = i18n;
   const route = findRouteForPath(i18nRoutes, location.pathname);
   const baseUrl = options.baseUrl;
-  // const currentLocaleInUrl = getCurrentLocaleFromURL(
-  //   location.pathname,
-  //   locales
-  // );
 
   if (!route) {
     return <Helmet htmlAttributes={{ lang: currentLocale }} />;
   }
-  // const canonicalUrl = baseUrl + route[defaultLocale];
-  // const showCanonical = currentLocale === defaultLocale || !currentLocaleInUrl;
 
   return (
     <Helmet htmlAttributes={{ lang: currentLocale }}>
-      {/* {showCanonical && <link rel="canonical" href={canonicalUrl} />} */}
       {locales
         .filter((locale) => locale !== currentLocale)
         .map((locale) =>
