@@ -17,7 +17,6 @@ const onPostBootstrap = ({ actions }, pluginOptions) => {
         fromPath: "/*",
         toPath: `/${locale}/:splat`,
         isPermanent: true,
-        force: true,
       };
       if (locale !== options.defaultLocale) {
         redirect.Language = locale;
