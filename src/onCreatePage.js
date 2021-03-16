@@ -70,7 +70,15 @@ module.exports.onCreatePage = ({ page, actions }) => {
       routesMap[routeId] = routesMap[routeId] || {};
       routesMap[routeId][locale] = path;
 
-      createPage(getPage(options, page, locale, path, path + "*"));
+      createPage(
+        getPage(
+          options,
+          page,
+          locale,
+          path,
+          visibleLocale ? `/${locale}/*` : "/*"
+        )
+      );
 
       if (locale === options.defaultLocale) {
         createRedirect({
@@ -82,11 +90,13 @@ module.exports.onCreatePage = ({ page, actions }) => {
 
       // with netlify redirects we can localise 404 pages, @see
       // https://docs.netlify.com/routing/redirects/redirect-options/#custom-404-page-handling
-      createRedirect({
-        fromPath: visibleLocale ? `/${locale}/*` : "/*",
-        toPath: visibleLocale ? `/${locale}/404/index.html` : "/404/index.html",
-        statusCode: 404,
-      });
+      // this is done automatically by using the matchPath 5th argument to the
+      // function `getPage`
+      // createRedirect({
+      //   fromPath: visibleLocale ? `/${locale}/*` : "/*",
+      //   toPath: visibleLocale ? `/${locale}/404/index.html` : "/404/index.html",
+      //   statusCode: 404,
+      // });
     });
 
     addI18nRoutesMappings(routesMap);

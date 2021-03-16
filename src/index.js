@@ -7,10 +7,10 @@ export const useIntl = reactUseIntl;
 
 /**
  * Output a translated string by id, a shortcut to `useIntl().formatMessage`
- * 
- * @param {string} id 
+ *
+ * @param {string} id
  * @param {object} [data]
- * @returns 
+ * @returns
  */
 export const _ = (id, data) => reactUseIntl().formatMessage({ id }, data);
 

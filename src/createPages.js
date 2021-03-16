@@ -35,7 +35,8 @@ const getPageComponent = ({ options, node }) => {
 
     if (!fs.existsSync(component)) {
       if (templateName) {
-        logger("info",
+        logger(
+          "info",
           `You can create a file "${templateName}" in the folder` +
             ` "${componentIdealDir}" instead of declaring it explicitly in the` +
             ` frontmatter section of the page ${slug}.`
@@ -43,12 +44,9 @@ const getPageComponent = ({ options, node }) => {
       }
     }
   }
-  
+
   if (!fs.existsSync(component)) {
-    logger(
-      "warn",
-      `No template component found for ${node.fileAbsolutePath}`
-    );
+    logger("warn", `No template component found for ${node.fileAbsolutePath}`);
   }
 
   return component;
