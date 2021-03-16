@@ -53,7 +53,7 @@ module.exports.onCreatePage = ({ page, actions }) => {
     // create a 404.html fallback page with default language, anyway with netlify
     // redirects the a localised version of the 404 page with a pretty URL should
     // be used by the condition here below
-    createPage(getPage(options, page, options.defaultLocale, "/404.html"));
+    // createPage(getPage(options, page, options.defaultLocale, "/404.html"));
   } else if (page.path === "/404/") {
     // console.log(`"onCreatePage" matched 404: ${page.path}`);
     deletePage(oldPage);
