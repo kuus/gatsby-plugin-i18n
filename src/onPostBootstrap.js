@@ -9,6 +9,7 @@ const onPostBootstrap = ({ actions }, pluginOptions) => {
 
   // create these redirects for netlify:
   // @see https://answers.netlify.com/t/custom-localised-404-page-not-working/8842
+  // FIXME: check that is actually works
   options.locales.forEach((locale) => {
     const visibleLocale = shouldCreateLocalisedPage(options, locale);
 
