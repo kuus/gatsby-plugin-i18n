@@ -83,17 +83,13 @@ const WrapPageElement = ({ element, props }, pluginOptions) => {
   const { i18n } = props.pageContext;
   const options = getOptions(pluginOptions);
 
-  if (!i18n /*  || !props.location */) {
+  if (!i18n) {
     if (options.debug) {
-      // if (!props.location) {
-      //   logger("info", "No 'location' in WrapPageElement props");
-      // } else if (!i18n) {
       logger(
         "info",
         `No 'i18n' in WrapPageElement props ${props.location.pathname}`
       );
     }
-    // }
     return element;
   }
 
