@@ -381,6 +381,21 @@ const getPage = (options, page, locale, path, matchPath) => {
   return data;
 };
 
+/**
+ * Put defaultLocale as last in the array, this is useful to create netlify
+ * redirects in the right order
+ * 
+ * @param {Options} options 
+ */
+const reorderLocales = (options) => {
+  const { locales, defaultLocale } = options;
+  const oldIdx = locales.indexOf(defaultLocale);
+  const newIdx = locales.length - 1;
+  
+  locales.splice(newIdx, 0, locales.splice(oldIdx, 1)[0]);
+  return locales;
+}
+
 module.exports = {
   cleanI18nRoutesMap,
   addI18nRoutesMappings,
@@ -395,4 +410,5 @@ module.exports = {
   getI18nOptions,
   shouldCreateLocalisedPage,
   getPage,
+  reorderLocales,
 };

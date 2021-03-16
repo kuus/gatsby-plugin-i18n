@@ -7,6 +7,7 @@ const {
   addI18nRoutesMappings,
   shouldCreateLocalisedPage,
   getPage,
+  reorderLocales,
 } = require("./utils-plugin");
 
 /**
@@ -58,10 +59,11 @@ module.exports.onCreatePage = ({ page, actions }) => {
     // console.log(`"onCreatePage" matched 404: ${page.path}`);
     deletePage(oldPage);
 
+    const sortedLocales = reorderLocales(options);
     const routesMap = /** @type {import("./utils-plugin").RoutesMap} */ ({});
     const routeId = normaliseRouteId(page.path);
 
-    locales.forEach((locale) => {
+    sortedLocales.forEach((locale) => {
       const withLocale = normaliseUrlPath(`/${locale}/404`);
       const withoutLocale = normaliseUrlPath("/404");
       const visibleLocale = shouldCreateLocalisedPage(options, locale);
