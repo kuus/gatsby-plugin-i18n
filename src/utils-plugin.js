@@ -389,11 +389,12 @@ const getPage = (options, page, locale, path, matchPath) => {
  */
 const reorderLocales = (options) => {
   const { locales, defaultLocale } = options;
-  const oldIdx = locales.indexOf(defaultLocale);
-  const newIdx = locales.length - 1;
+  const sorted = [...locales];
+  const oldIdx = sorted.indexOf(defaultLocale);
+  const newIdx = sorted.length - 1;
 
-  locales.splice(newIdx, 0, locales.splice(oldIdx, 1)[0]);
-  return locales;
+  sorted.splice(newIdx, 0, sorted.splice(oldIdx, 1)[0]);
+  return sorted;
 };
 
 module.exports = {
