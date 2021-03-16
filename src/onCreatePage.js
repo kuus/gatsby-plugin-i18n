@@ -53,7 +53,7 @@ module.exports.onCreatePage = ({ page, actions }) => {
     // create a 404.html fallback page with default language, anyway with netlify
     // redirects the a localised version of the 404 page with a pretty URL should
     // be used by the condition here below
-    createPage(getPage(options, page, options.defaultLocale, "404.html"));
+    createPage(getPage(options, page, options.defaultLocale, "/404.html"));
   } else if (page.path === "/404/") {
     // console.log(`"onCreatePage" matched 404: ${page.path}`);
     deletePage(oldPage);
@@ -76,7 +76,7 @@ module.exports.onCreatePage = ({ page, actions }) => {
           page,
           locale,
           path,
-          visibleLocale ? `/${locale}/*` : "/*"
+          // visibleLocale ? `/${locale}/*` : "/*"
         )
       );
 
@@ -91,12 +91,13 @@ module.exports.onCreatePage = ({ page, actions }) => {
       // with netlify redirects we can localise 404 pages, @see
       // https://docs.netlify.com/routing/redirects/redirect-options/#custom-404-page-handling
       // this is done automatically by using the matchPath 5th argument to the
-      // function `getPage`
-      // createRedirect({
-      //   fromPath: visibleLocale ? `/${locale}/*` : "/*",
-      //   toPath: visibleLocale ? `/${locale}/404/index.html` : "/404/index.html",
-      //   statusCode: 404,
-      // });
+      // function `getPage`, we don't do it though, as the redirect automatically
+      // created has a 200 instead of a 404 statusCode
+      createRedirect({
+        fromPath: visibleLocale ? `/${locale}/*` : "/*",
+        toPath: visibleLocale ? `/${locale}/404/index.html` : "/404/index.html",
+        statusCode: 404,
+      });
     });
 
     addI18nRoutesMappings(routesMap);
