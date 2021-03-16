@@ -1,5 +1,7 @@
 # Gatsby plugin i18n
 
+This plugin is meant to be used with netlify and its [gatsby-plugin-netlify](https://github.com/gatsbyjs/gatsby/tree/master/packages/gatsby-plugin-netlify) to correctly handle redirects server side. A less SEO friendly alternative would be to use this plugin alongside [gatsby-plugin-meta-redirect](https://github.com/nsresulta/gatsby-plugin-meta-redirect) or [gatsby-plugin-client-side-redirect](https://github.com/dhakerShiv/gatsby-plugin-client-side-redirect), they all exploit the gatsby's [`createRedirect` action](https://www.gatsbyjs.com/docs/reference/config-files/actions/#createRedirect).
+
 ## Resources
 
 - [Netlify redirects adn localization](https://docs.netlify.com/routing/redirects/redirect-options/#redirect-by-country-or-language)
