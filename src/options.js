@@ -14,6 +14,8 @@ const defaultOptions = {
   untranslatedComponent: null,
   useMdx: true,
   frontmatterKeyForLocalisedSlug: "slug",
+  // netlify/server related options:
+  hasSplatsRedirect: true
 };
 
 const getOptions = (pluginOptions = {}) => ({

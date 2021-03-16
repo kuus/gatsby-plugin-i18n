@@ -72,23 +72,15 @@ module.exports.onCreatePage = ({ page, actions }) => {
       routesMap[routeId] = routesMap[routeId] || {};
       routesMap[routeId][locale] = path;
 
-      createPage(
-        getPage(
-          options,
-          page,
-          locale,
-          path
-          // visibleLocale ? `/${locale}/*` : "/*"
-        )
-      );
+      createPage(getPage(options, page, locale, path));
 
-      // if (locale === options.defaultLocale) {
-      //   createRedirect({
-      //     fromPath: visibleLocale ? withoutLocale : withLocale,
-      //     toPath: visibleLocale ? withLocale : withoutLocale,
-      //     isPermanent: true,
-      //   });
-      // }
+      if (!options.hasSplatsRedirect && locale === options.defaultLocale) {
+        createRedirect({
+          fromPath: visibleLocale ? withoutLocale : withLocale,
+          toPath: visibleLocale ? withLocale : withoutLocale,
+          isPermanent: true,
+        });
+      }
 
       // with netlify redirects we can localise 404 pages, @see
       // https://docs.netlify.com/routing/redirects/redirect-options/#custom-404-page-handling
@@ -148,13 +140,13 @@ module.exports.onCreatePage = ({ page, actions }) => {
 
           createPage(getPage(options, page, locale, path));
 
-          // if (locale === options.defaultLocale) {
-          //   createRedirect({
-          //     fromPath: visibleLocale ? withoutLocale : withLocale,
-          //     toPath: visibleLocale ? withLocale : withoutLocale,
-          //     isPermanent: true,
-          //   });
-          // }
+          if (!options.hasSplatsRedirect && locale === options.defaultLocale) {
+            createRedirect({
+              fromPath: visibleLocale ? withoutLocale : withLocale,
+              toPath: visibleLocale ? withLocale : withoutLocale,
+              isPermanent: true,
+            });
+          }
         });
 
         addI18nRoutesMappings(routesMap);

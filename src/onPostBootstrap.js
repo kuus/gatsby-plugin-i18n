@@ -9,14 +9,14 @@ const onPostBootstrap = ({ actions }, pluginOptions) => {
 
   // create these redirects for netlify:
   // @see https://answers.netlify.com/t/custom-localised-404-page-not-working/8842
-  // FIXME: check that is actually works
-  options.locales.forEach((locale) => {
-    const visibleLocale = shouldCreateLocalisedPage(options, locale);
-
-    if (visibleLocale) {
+  // FIXME: check that this actually works
+  if (options.hasSplatsRedirect) {
+    options.locales.forEach((locale) => {
+      const visibleLocale = shouldCreateLocalisedPage(options, locale);
+  
       const redirect = {
-        fromPath: "/*",
-        toPath: `/${locale}/:splat`,
+        fromPath: visibleLocale ? "/*" : `/${locale}/*`,
+        toPath: visibleLocale ? `/${locale}/:splat` : "/:splat",
         isPermanent: true,
       };
       if (locale !== options.defaultLocale) {
@@ -24,8 +24,8 @@ const onPostBootstrap = ({ actions }, pluginOptions) => {
       }
 
       createRedirect(redirect);
-    }
-  });
+    });
+  }
 };
 
 module.exports = onPostBootstrap;
