@@ -204,7 +204,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     // other (with->without or without->with)
     if (locale === options.defaultLocale) {
       createRedirect({
-        fromPath: visibleLocale ? withoutLocale : withLocale,
+        fromPath: (visibleLocale ? withoutLocale : withLocale).replace(/\/*$/g, ""),
         toPath: visibleLocale ? withLocale : withoutLocale,
         isPermanent: true,
         force: true,
