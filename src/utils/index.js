@@ -7,7 +7,7 @@
  * @param {string} msg Log message
  */
 const logger = (type = "log", msg) => {
-  console[type](`gatsby-i18n: ${msg}`);
+  console[type](`[gatsby-i18n]: ${msg}`);
 };
 
 /**
@@ -44,8 +44,9 @@ const normaliseRouteId = (input) => {
 /**
  * Find route object that matches the given path
  *
+ * @param {GatsbyI18n.RoutesMap} routes
  * @param {string} path The current window.location pathname
- * @returns ?GatsbyI18n.Route
+ * @returns {GatsbyI18n.Route}
  */
 const findRouteForPath = (routes, path) => {
   const normalisedPath = normaliseUrlPath(path);
@@ -65,9 +66,31 @@ const findRouteForPath = (routes, path) => {
   return null;
 };
 
+/**
+ * Get current route based on browser's location
+ *
+ * @param {import("@reach/router").WindowLocation} location
+ * @param {string} locale
+ * @returns {?string}
+ */
+const getCurrentRoute = (location, locale) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const { routes } = window["___gatsbyI18n"];
+  const matchedRoute = findRouteForPath(routes, location.pathname);
+
+  if (matchedRoute) {
+    return matchedRoute[locale] || `/${locale}/404`;
+  }
+  return `/${locale}/404`;
+};
+
 module.exports = {
   logger,
   normaliseUrlPath,
   normaliseRouteId,
   findRouteForPath,
+  getCurrentRoute,
 };

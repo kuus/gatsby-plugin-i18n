@@ -2,17 +2,22 @@
 
 const nodePath = require("path");
 const fs = require("fs");
-const { getOptions } = require("./options");
-const { logger } = require("./utils");
+const { getOptions } = require("../utils/options");
+const { logger, normaliseUrlPath } = require("../utils");
 const {
-  normaliseUrlPath,
   getPageContextData,
   getTemplateBasename,
   addI18nRoutesMappings,
   shouldCreateLocalisedPage,
-} = require("./utils-plugin");
+  getI18nConfig,
+} = require("../utils/internal");
 
-const getPageComponent = ({ options, node }) => {
+/**
+ * @param {GatsbyI18n.Options} options
+ * @param {any} node
+ * @returns {string}
+ */
+const getPageComponent = (options, node) => {
   const { pathContent, templateName } = options;
   const { relativePath, frontmatter, fields } = node;
   const { fileDir, slug } = fields;
@@ -55,6 +60,7 @@ const getPageComponent = ({ options, node }) => {
 const createPages = async ({ graphql, actions }, pluginOptions) => {
   const { createPage, createRedirect } = actions;
   const options = getOptions(pluginOptions);
+  const config = getI18nConfig();
   const { pathContent, templateName } = options;
 
   let rightContentPath = "";
@@ -69,19 +75,11 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
       allFile(filter: {
         absolutePath: {regex: "${new RegExp(rightContentPath)}"},
         ext: {in: [".js", ".jsx", ".ts", ".tsx"]},
-        name: {nin: ["${getTemplateBasename(templateName)}", "404"]}
+        name: {nin: ["${getTemplateBasename(templateName)}"]}
       }) {
-        edges {
-          node {
-            id
-            relativePath
-            fields {
-              slug
-              locale
-              fileDir
-              route
-            }
-          }
+        nodes {
+          id
+          relativePath
         }
       }
       allMarkdown: ${options.useMdx ? "allMdx" : "allMarkdownRemark"}(
@@ -89,37 +87,35 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
           frontmatter: { template: { ne: null } }
         }
       ) {
-        edges {
-          node {
-            id
-            fields {
-              slug
-              locale
-              fileDir
-              route
-            }
-            frontmatter {
-              template
-            #  draft
-            #  hidden
-            }
+        nodes {
+          id
+          fields {
+            slug
+            locale
+            fileDir
+            route
+          }
+          frontmatter {
+            template
+          #  draft
+          #  hidden
           }
         }
       }
     }
   `);
 
-  const filePages = result.data.allFile.edges;
-  const markdownPages = result.data.allMarkdown.edges;
+  const filePages = result.data.allFile.nodes;
+  const markdownPages = result.data.allMarkdown.nodes;
   const allPages = markdownPages.concat(filePages);
-  const routesMap = /** @type {import("./utils-plugin").RoutesMap} */ ({});
+  const routesMap = /** @type {GatsbyI18n.RoutesMap} */ ({});
 
   // build routes map
-  allPages.forEach((edge) => {
-    const { slug, locale, route: routeId } = edge.node.fields;
+  allPages.forEach((node) => {
+    const { slug, locale, route: routeId } = node.fields;
     const withLocale = normaliseUrlPath(`/${locale}/${slug}`);
     const withoutLocale = normaliseUrlPath(`/${slug}`);
-    const visibleLocale = shouldCreateLocalisedPage(options, locale);
+    const visibleLocale = shouldCreateLocalisedPage(config, locale);
 
     routesMap[routeId] = routesMap[routeId] || {};
     routesMap[routeId][locale] = visibleLocale ? withLocale : withoutLocale;
@@ -133,18 +129,18 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
 
       // if the translated versions are less then the default set of locales
       // create some untranslated pages
-      if (routelocales.length < options.locales.length) {
-        options.locales.forEach((locale) => {
+      if (routelocales.length < config.locales.length) {
+        config.locales.forEach((locale) => {
           // bail if the route is already there
           if (routeData[locale]) return;
 
           const context = { route: routeId, locale };
           // now we need to determine the url path of the untranslated route
-          const routeDefaultPath = routeData[options.defaultLocale];
+          const routeDefaultPath = routeData[config.defaultLocale];
           // if it exists use the route's path assigned to the default locale,
           // otherwise use as path the route id preceded by the current locale
           let withLocale = routeDefaultPath
-            ? routeDefaultPath.replace(options.defaultLocale, locale)
+            ? routeDefaultPath.replace(config.defaultLocale, locale)
             : `${locale}/${routeId}`;
           // then normalises the URL slashes
           withLocale = normaliseUrlPath(withLocale);
@@ -163,7 +159,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
             component: options.untranslatedComponent,
             context: {
               ...context,
-              ...getPageContextData({ options, locale }, { availableIn }),
+              ...getPageContextData(locale, { availableIn }),
             },
           });
         });
@@ -174,15 +170,15 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   // create all markdown pages, the file ones, instead, are handled by gatsby
   // through the createStatefulPages lifecycle and are therefore just treated in
   // the `onCreatePage` of the specific project using this plugin
-  markdownPages.forEach(({ node }) => {
+  markdownPages.forEach((node) => {
     const {
       id,
       fields: { route: routeId, slug, locale },
     } = node;
     const withLocale = normaliseUrlPath(`/${locale}/${slug}`);
     const withoutLocale = normaliseUrlPath(`/${slug}`);
-    const visibleLocale = shouldCreateLocalisedPage(options, locale);
-    const component = getPageComponent({ options, node });
+    const visibleLocale = shouldCreateLocalisedPage(config, locale);
+    const component = getPageComponent(options, node);
     // FIXME: check what we actually need to pass to context
     const context = { id, /* route: routeId, slug, */ locale };
 
@@ -196,13 +192,13 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
       component,
       context: {
         ...context,
-        ...getPageContextData({ options, locale }),
+        ...getPageContextData(locale),
       },
     });
 
     // always create redirects for the default locale either one way or the
     // other (with->without or without->with)
-    if (!options.hasSplatsRedirect && locale === options.defaultLocale) {
+    if (!options.hasSplatRedirects && locale === config.defaultLocale) {
       createRedirect({
         fromPath: visibleLocale ? withoutLocale : withLocale,
         toPath: visibleLocale ? withLocale : withoutLocale,

@@ -1,14 +1,15 @@
 // @ts-check
 
-const { logger, normaliseUrlPath, normaliseRouteId } = require("./utils");
+const { logger, normaliseUrlPath, normaliseRouteId } = require("../utils");
 const {
   getI18nOptions,
+  getI18nConfig,
   getTemplateBasename,
   addI18nRoutesMappings,
   shouldCreateLocalisedPage,
   getPage,
   reorderLocales,
-} = require("./utils-plugin");
+} = require("../utils/internal");
 
 /**
  * Here we should create tha same context that we do on `createPages`, it would
@@ -33,10 +34,12 @@ const {
  * };
  * ```
  */
-module.exports.onCreatePage = ({ page, actions }) => {
+const onCreatePage = ({ page, actions }) => {
   const { createPage, createRedirect, deletePage } = actions;
   const options = getI18nOptions();
-  const { locales, templateName, excludePaths } = options;
+  const config = getI18nConfig();
+  const { templateName, excludePaths } = options;
+  const { locales } = config;
   const normalisedExcludedPaths = excludePaths.map(normaliseUrlPath);
   const oldPage = { ...page };
   const templateBasename = getTemplateBasename(templateName);
@@ -52,29 +55,29 @@ module.exports.onCreatePage = ({ page, actions }) => {
     // console.log(`"onCreatePage" matched 404.html: ${page.path}`);
     deletePage(oldPage);
     // create a 404.html fallback page with default language, anyway with netlify
-    // redirects the a localised version of the 404 page with a pretty URL should
+    // redirects the localised version of the 404 page with a pretty URL should
     // be used by the condition here below
-    createPage(getPage(options, page, options.defaultLocale, "/404.html"));
+    createPage(getPage(page, config.defaultLocale, "/404.html"));
   } else if (page.path === "/404/") {
     // console.log(`"onCreatePage" matched 404: ${page.path}`);
     deletePage(oldPage);
 
-    const sortedLocales = reorderLocales(options);
-    const routesMap = /** @type {import("./utils-plugin").RoutesMap} */ ({});
+    const sortedLocales = reorderLocales(config);
+    const routesMap = /** @type {GatsbyI18n.RoutesMap} */ ({});
     const routeId = normaliseRouteId(page.path);
 
     sortedLocales.forEach((locale) => {
       const withLocale = normaliseUrlPath(`/${locale}/404`);
       const withoutLocale = normaliseUrlPath("/404");
-      const visibleLocale = shouldCreateLocalisedPage(options, locale);
+      const visibleLocale = shouldCreateLocalisedPage(config, locale);
       const path = visibleLocale ? withLocale : withoutLocale;
 
       routesMap[routeId] = routesMap[routeId] || {};
       routesMap[routeId][locale] = path;
 
-      createPage(getPage(options, page, locale, path));
+      createPage(getPage(page, locale, path));
 
-      if (!options.hasSplatsRedirect && locale === options.defaultLocale) {
+      if (!options.hasSplatRedirects && locale === config.defaultLocale) {
         createRedirect({
           fromPath: visibleLocale ? withoutLocale : withLocale,
           toPath: visibleLocale ? withLocale : withoutLocale,
@@ -125,22 +128,22 @@ module.exports.onCreatePage = ({ page, actions }) => {
         // first always delete
         deletePage(oldPage);
 
-        const routesMap = /** @type {import("./utils-plugin").RoutesMap} */ ({});
+        const routesMap = /** @type {GatsbyI18n.RoutesMap} */ ({});
         const routeId = normaliseRouteId(page.path);
 
         // then produce the localised pages according to the current i18n options
         locales.forEach((locale) => {
           const withLocale = normaliseUrlPath(`/${locale}/${page.path}`);
           const withoutLocale = normaliseUrlPath(`/${page.path}`);
-          const visibleLocale = shouldCreateLocalisedPage(options, locale);
+          const visibleLocale = shouldCreateLocalisedPage(config, locale);
           const path = visibleLocale ? withLocale : withoutLocale;
 
           routesMap[routeId] = routesMap[routeId] || {};
           routesMap[routeId][locale] = path;
 
-          createPage(getPage(options, page, locale, path));
+          createPage(getPage(page, locale, path));
 
-          if (!options.hasSplatsRedirect && locale === options.defaultLocale) {
+          if (!options.hasSplatRedirects && locale === config.defaultLocale) {
             createRedirect({
               fromPath: visibleLocale ? withoutLocale : withLocale,
               toPath: visibleLocale ? withLocale : withoutLocale,
@@ -154,3 +157,5 @@ module.exports.onCreatePage = ({ page, actions }) => {
     }
   }
 };
+
+module.exports = onCreatePage;

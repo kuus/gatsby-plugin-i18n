@@ -10,17 +10,17 @@ export const useIntl = reactUseIntl;
  *
  * @param {string} id
  * @param {object} [data]
- * @returns
+ * @returns {string}
  */
 export const _ = (id, data) => reactUseIntl().formatMessage({ id }, data);
 
-export {
-  default as Link,
-  navigate,
-  changeLocale,
-  getCurrentRoute,
-} from "./link";
+/**
+ * @alias _
+ */
+export const t = _;
 
-export { normaliseUrlPath, findRouteForPath } from "./utils";
+export { default as Link, navigate, changeLocale } from "./components/Link";
 
-export { I18nConsumer, useI18n } from "./I18nContext";
+export { normaliseUrlPath, findRouteForPath, getCurrentRoute } from "./utils";
+
+export { I18nConsumer, useI18n } from "./components/I18nContext";

@@ -3,26 +3,100 @@
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
-const { getOptions } = require("./options");
+const { getOptions, getConfig } = require("./options");
 const {
   logger,
   normaliseUrlPath,
   normaliseRouteId,
   findRouteForPath,
-} = require("./utils");
+} = require(".");
 
 /**
- * @typedef {ReturnType<import("./options").getOptions>} Options
- *
- * @typedef {{ [key: string]: { [key: string]: string } }} RoutesMap
+ * @type {string}
  */
+let configPath;
 
-const getRoutesPath = () => {
-  return `${__dirname}/.routes.json`;
+/**
+ * @type {string}
+ */
+let optionsPath = path.resolve(__dirname, "../", ".options.json");
+
+/**
+ * @type {string}
+ */
+let routesPath = path.resolve(__dirname, "../", ".routes.json");
+
+/**
+ * We write config to a file so that we can use it from the project implementing
+ * this plugin in its own `onCreatePage` gatsby-node hook, the reason for this
+ * is that we cannot get the pages created from this plugin's `onCreatePage`
+ * because gatsby prevents it to avoid infinite loop, see [comment here](./onCreatePage).
+ * Because of this that work need to be done in the project and in there we cannot
+ * get this plugin's options and configuration, so we write it to a file and
+ * read it with `getI18nOptions` at the right time.
+ *
+ * @param {string} baseDir
+ */
+ const ensureI18nConfig = (baseDir) => {
+  const { debug, pathConfig } = getI18nOptions();
+
+  configPath = path.join(baseDir, pathConfig);
+
+  if (!fs.existsSync(configPath)) {
+    try {
+      const data = getConfig();
+      const ext = path.extname(configPath);
+      const content = ext === ".yml" ? yaml.dump(data) : JSON.stringify(data);
+      fs.writeFileSync(configPath, content, "utf-8");
+    } catch (e) {
+      logger("error", `Failed to write required file ${configPath}`);
+    }
+  } else {
+    if (debug) {
+      logger("info", `Found config file at ${configPath}`);
+    }
+  }
 };
 
-const getOptionsPath = () => {
-  return `${__dirname}/.config.json`;
+/**
+ * @returns {GatsbyI18n.Config}
+ */
+const getI18nConfig = () => {
+  try {
+    const data = fs.readFileSync(configPath, "utf8");
+    const ext = path.extname(configPath);
+    const content = ext === ".yml" ? yaml.load(data) : JSON.parse(data);
+    return content;
+  } catch (e) {
+    logger("error", `Failed to read file ${configPath}`);
+  }
+};
+
+/**
+ * @returns {GatsbyI18n.Options}
+ */
+const getI18nOptions = () => {
+  try {
+    return getOptions(require(optionsPath));
+  } catch (e) {
+    logger("error", `Failed to read file ${optionsPath}`);
+  }
+};
+
+/**
+ * We write options to a file, the reason why is explained above,
+ * @see ensureI18nConfig
+ *
+ * @param {Partial<GatsbyI18n.Options>} custom
+ */
+const writeI18nOptions = (custom) => {
+  const data = getOptions(custom);
+
+  try {
+    fs.writeFileSync(optionsPath, JSON.stringify(data), "utf-8");
+  } catch (e) {
+    logger("error", `Failed to write file ${optionsPath}`);
+  }
 };
 
 /**
@@ -39,9 +113,9 @@ const getI18nRoutesMap = () => {
   let routesMap = {};
 
   try {
-    routesMap = JSON.parse(fs.readFileSync(getRoutesPath(), "utf-8"));
+    routesMap = JSON.parse(fs.readFileSync(routesPath, "utf-8"));
   } catch (e) {
-    logger("warn", `Failed to read file ${getRoutesPath()}`);
+    logger("warn", `Failed to read file ${routesPath}`);
   }
 
   return routesMap;
@@ -51,13 +125,13 @@ const getI18nRoutesMap = () => {
  * Write the routes mapping to disk, mostly in order to be used from the custom
  * Link component
  *
- * @param {RoutesMap} data
+ * @param {GatsbyI18n.RoutesMap} data
  */
 const writeI18nRoutesMap = (data) => {
   try {
-    fs.writeFileSync(getRoutesPath(), JSON.stringify(data), "utf-8");
+    fs.writeFileSync(routesPath, JSON.stringify(data), "utf-8");
   } catch (e) {
-    logger("error", `Failed to write file ${getRoutesPath()}`);
+    logger("error", `Failed to write file ${routesPath}`);
   }
 };
 
@@ -66,7 +140,7 @@ const writeI18nRoutesMap = (data) => {
  * for instance to dynamically add localised pages like tags in your project's
  * `gatsby-node.js`
  *
- * @param {RoutesMap} data
+ * @param {GatsbyI18n.RoutesMap} data
  */
 const addI18nRoutesMappings = (data) => {
   const existingRoutes = getI18nRoutesMap();
@@ -74,37 +148,12 @@ const addI18nRoutesMappings = (data) => {
 };
 
 /**
- * @returns {Options}
- */
-const getI18nOptions = () => {
-  try {
-    return getOptions(require(getOptionsPath()));
-  } catch (e) {
-    logger("error", `Failed to read file ${getOptionsPath()}`);
-  }
-};
-
-/**
- * We write config to a file so that we can use it from the project implementing
- * this plugin in its own `onCreatePage` gatsby-node hook, the reason for this
- * is that we cannot get the pages created from this plugin's `onCreatePage`
- * because gatsby prevents it to avoid infinite loop, see [comment here](./onCreatePage).
- * Because of this that work need to be done in the project and in there we cannot
- * get this plugin's options and configuration, so we write it to a file and
- * read it with `getI18nOptions` at the right time.
+ * Flatten nested messages object data
  *
- * @param {Options} pluginOptions
+ * @param {{ [key: string]: string | { [key: string]: string; }}} nestedMessages
+ * @param {string} [prefix]
+ * @returns
  */
-const writeI18nOptions = (pluginOptions) => {
-  const data = getOptions(pluginOptions);
-
-  try {
-    fs.writeFileSync(getOptionsPath(), JSON.stringify(data), "utf-8");
-  } catch (e) {
-    logger("error", `Failed to write file ${getOptionsPath()}`);
-  }
-};
-
 const flattenMessages = (nestedMessages, prefix = "") => {
   return Object.keys(nestedMessages).reduce((messages, key) => {
     let value = nestedMessages[key];
@@ -125,7 +174,9 @@ const flattenMessages = (nestedMessages, prefix = "") => {
  */
 const getMessages = (fullPath) => {
   try {
-    const messages = yaml.load(fs.readFileSync(fullPath, "utf8"));
+    const messages = /** @type {object} */ (yaml.load(
+      fs.readFileSync(fullPath, "utf8")
+    ));
 
     return flattenMessages(messages);
   } catch (error) {
@@ -141,12 +192,12 @@ const getMessages = (fullPath) => {
 /**
  * If a localised messages file (e.g. `en.yml`) does not exist it creates it
  *
- * @param {Options} options
+ * @param {string} pathMessages
  * @param {string} locale
  * @returns {string} The path of the localised messages file
  */
-const ensureLocalisedMessagesFile = (options, locale) => {
-  const fullPath = path.join(options.pathData, `${locale}.yml`);
+const ensureLocalisedMessagesFile = (pathMessages, locale) => {
+  const fullPath = path.join(pathMessages, `${locale}.yml`);
   if (!fs.existsSync(fullPath)) {
     fs.writeFileSync(fullPath, "", "utf-8");
   }
@@ -156,26 +207,29 @@ const ensureLocalisedMessagesFile = (options, locale) => {
 
 /**
  * Ensure that files with translated strings exist, if the don't they are created
- *
- * @param {Options} pluginOptions
  */
-const ensureLocalisedMessagesFiles = (pluginOptions) => {
-  const options = getOptions(pluginOptions);
-  options.locales.forEach((locale) => {
-    ensureLocalisedMessagesFile(options, locale);
+const ensureLocalisedMessagesFiles = () => {
+  const { locales } = getI18nConfig();
+  const { pathMessages } = getI18nOptions();
+
+  locales.forEach((locale) => {
+    ensureLocalisedMessagesFile(pathMessages, locale);
   });
 };
 
 /**
  * Get gatsby's page context data
  *
- * @param {{ options: Options; locale: string; }} args
- * @param {object} additional
+ * @param {string} locale
+ * @param {object} [additional]
+ * @returns {GatsbyI18n.PageContext}
  */
-const getPageContextData = ({ options, locale }, additional = {}) => {
-  const { locales, defaultLocale } = options || getI18nOptions();
+const getPageContextData = (locale, additional = {}) => {
+  const { locales, defaultLocale } = getI18nConfig();
+  const { pathMessages } = getI18nOptions();
+
   locale = locale || defaultLocale;
-  const messagesPath = ensureLocalisedMessagesFile(options, locale);
+  const messagesPath = ensureLocalisedMessagesFile(pathMessages, locale);
   const messages = getMessages(messagesPath);
 
   return {
@@ -193,20 +247,20 @@ const getPageContextData = ({ options, locale }, additional = {}) => {
  * Extract from path
  *
  * Given the file "/my/page/index.en.md":
- * - `route` will be e.g. "/my/page"
+ * - `routeId` will be e.g. "/my/page"
  * - `slug` will be e.g. "/my/page"
  * - `locale` will be e.g. "en"
  * - `fileDir` will be e.g. "/my/page"
  *
- * @param {{ options: Options; fileAbsolutePath: string; }} args
+ * @param {string} fileAbsolutePath
  */
-const extractFromPath = ({ options, fileAbsolutePath }) => {
-  const file = extractFileParts(options, fileAbsolutePath);
-  const route = getFileRouteId(file);
+const extractFromPath = (fileAbsolutePath) => {
+  const file = extractFileParts(fileAbsolutePath);
+  const routeId = getFileRouteId(file);
   const slug = getFileSlug(file);
-  const locale = getFileLocale(options, file);
+  const locale = getFileLocale(file);
 
-  return { route, slug, locale, fileDir: file.dir };
+  return { routeId, slug, locale, fileDir: file.dir };
 };
 
 /**
@@ -217,11 +271,10 @@ const extractFromPath = ({ options, fileAbsolutePath }) => {
  * - `name` e.g. "page"
  * - `locale` e.g. "en"
  *
- * @param {Options} options
  * @param {string} fileAbsolutePath
  */
-const extractFileParts = (options, fileAbsolutePath) => {
-  const { pathContent } = options;
+const extractFileParts = (fileAbsolutePath) => {
+  const { pathContent } = getI18nOptions();
   let rightContentPath = "";
   if (Array.isArray(pathContent)) {
     const matches = pathContent.filter((p) => fileAbsolutePath.includes(p));
@@ -272,11 +325,10 @@ const getFileSlug = ({ dir, name }) => {
 
 /**
  *
- * @param {Options} options
  * @param {ReturnType<typeof extractFileParts>} file
  */
-const getFileLocale = (options, file) => {
-  const { locales, defaultLocale } = options;
+const getFileLocale = (file) => {
+  const { locales, defaultLocale } = getI18nConfig();
   let locale = defaultLocale;
 
   if (file.locale) {
@@ -299,14 +351,14 @@ const getFileLocale = (options, file) => {
  * It checks that the given file path is within the `pathContent` defined in the
  * plugin options and that it is not a template
  *
- * @param {{ pathContent: string|Array<string>; templateName: string }} file
  * @param {string} filePath
  * @returns {boolean}
  */
-const isFileToLocalise = ({ pathContent, templateName }, filePath) => {
+const isFileToLocalise = (filePath) => {
   if (!filePath) {
     return false;
   }
+  const { pathContent, templateName } = getI18nOptions();
   let isInContentPath = false;
   const extName = path.extname(filePath);
   // console.log(`isFileToLocalise? ${filePath}, with 'extName': ${extName}`)
@@ -348,24 +400,23 @@ const getTemplateBasename = (name) => {
 
 /**
  *
- * @param {Options} options
+ * @param {GatsbyI18n.Config} config
  * @param {string} locale
  */
-const shouldCreateLocalisedPage = (options, locale) => {
-  if (locale === options.defaultLocale && options.hideDefaultLocaleInUrl) {
+const shouldCreateLocalisedPage = (config, locale) => {
+  if (locale === config.defaultLocale && config.hideDefaultLocaleInUrl) {
     return false;
   }
   return true;
 };
 
 /**
- * @param {Options} options
- * @param {any} page
+ * @param {import("gatsby").Page<{}>} page
  * @param {string} [locale]
  * @param {string} [path]
  * @param {string} [matchPath]
  */
-const getPage = (options, page, locale, path, matchPath) => {
+const getPage = (page, locale, path, matchPath) => {
   const data = {
     ...page,
     path,
@@ -374,7 +425,7 @@ const getPage = (options, page, locale, path, matchPath) => {
     context: {
       ...page.context,
       locale,
-      ...getPageContextData({ options, locale }),
+      ...getPageContextData(locale),
     },
   };
 
@@ -385,10 +436,10 @@ const getPage = (options, page, locale, path, matchPath) => {
  * Put defaultLocale as last in the array, this is useful to create netlify
  * redirects in the right order
  *
- * @param {Options} options
+ * @param {GatsbyI18n.Config} config
  */
-const reorderLocales = (options) => {
-  const { locales, defaultLocale } = options;
+const reorderLocales = (config) => {
+  const { locales, defaultLocale } = config;
   const sorted = [...locales];
   const oldIdx = sorted.indexOf(defaultLocale);
   const newIdx = sorted.length - 1;
@@ -398,17 +449,18 @@ const reorderLocales = (options) => {
 };
 
 module.exports = {
+  ensureI18nConfig,
+  getI18nConfig,
+  getI18nOptions,
+  writeI18nOptions,
+  getI18nRoutesMap,
   cleanI18nRoutesMap,
   addI18nRoutesMappings,
-  writeI18nOptions,
+  ensureLocalisedMessagesFiles,
   getPageContextData,
   extractFromPath,
   isFileToLocalise,
   getTemplateBasename,
-  normaliseUrlPath,
-  findRouteForPath,
-  ensureLocalisedMessagesFiles,
-  getI18nOptions,
   shouldCreateLocalisedPage,
   getPage,
   reorderLocales,
