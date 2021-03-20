@@ -8,7 +8,7 @@ const {
   getPageContextData,
   getTemplateBasename,
   addI18nRoutesMappings,
-  shouldCreateLocalisedPage,
+  getUrlData,
   getI18nConfig,
 } = require("../utils/internal");
 
@@ -113,12 +113,10 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   // build routes map
   allPages.forEach((node) => {
     const { slug, locale, route: routeId } = node.fields;
-    const withLocale = normaliseUrlPath(`/${locale}/${slug}`);
-    const withoutLocale = normaliseUrlPath(`/${slug}`);
-    const visibleLocale = shouldCreateLocalisedPage(config, locale);
+    const { url } = getUrlData(config, locale, slug);
 
     routesMap[routeId] = routesMap[routeId] || {};
-    routesMap[routeId][locale] = visibleLocale ? withLocale : withoutLocale;
+    routesMap[routeId][locale] = url;
   });
 
   // add fallback page for untraslated routes
@@ -175,9 +173,12 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
       id,
       fields: { route: routeId, slug, locale },
     } = node;
-    const withLocale = normaliseUrlPath(`/${locale}/${slug}`);
-    const withoutLocale = normaliseUrlPath(`/${slug}`);
-    const visibleLocale = shouldCreateLocalisedPage(config, locale);
+    const {
+      url,
+      urlWithLocale,
+      urlWithoutLocale,
+      isLocaleVisible,
+    } = getUrlData(config, locale, slug);
     const component = getPageComponent(options, node);
     // FIXME: check what we actually need to pass to context
     const context = { id, /* route: routeId, slug, */ locale };
@@ -188,7 +189,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
 
     // create page with right URLs
     createPage({
-      path: visibleLocale ? withLocale : withoutLocale,
+      path: url,
       component,
       context: {
         ...context,
@@ -200,8 +201,8 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     // other (with->without or without->with)
     if (!options.hasSplatRedirects && locale === config.defaultLocale) {
       createRedirect({
-        fromPath: visibleLocale ? withoutLocale : withLocale,
-        toPath: visibleLocale ? withLocale : withoutLocale,
+        fromPath: isLocaleVisible ? urlWithoutLocale : urlWithLocale,
+        toPath: isLocaleVisible ? urlWithLocale : urlWithoutLocale,
         isPermanent: true,
       });
     }

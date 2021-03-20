@@ -3,8 +3,8 @@
 import React from "react";
 import { Link as GatsbyLink, navigate as gatsbyNavigate } from "gatsby";
 import { useI18n } from "./I18nContext";
-import { normaliseRouteId, normaliseUrlPath } from "../utils";
-import i18nRoutes from "../.routes.json";
+import { normaliseRouteId, normaliseUrlPath } from "../../utils";
+import i18nRoutes from "../../.routes.json";
 
 /**
  * Get the localised destination URL based on the given `routeId`

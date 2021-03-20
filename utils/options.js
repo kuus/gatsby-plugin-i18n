@@ -1,13 +1,9 @@
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-
-var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
-
 // @ts-check
 
 /**
  * @type {GatsbyI18n.Options}
  */
-var defaultOptions = {
+const defaultOptions = {
   debug: false,
   pathConfig: "src/content/settings/i18n/config.yml",
   pathMessages: "src/content/settings/i18n/messages",
@@ -19,50 +15,43 @@ var defaultOptions = {
   useMdx: true,
   frontmatterKeyForLocalisedSlug: "slug",
   // netlify/server related options:
-  hasSplatRedirects: true
+  hasSplatRedirects: true,
 };
+
 /**
  * @type {GatsbyI18n.Config}
  */
-
-var defaultConfig = {
+const defaultConfig = {
   baseUrl: "",
   locales: ["en"],
   defaultLocale: "en",
   // enforceLocalisedUrls: false,
-  hideDefaultLocaleInUrl: true
+  hideDefaultLocaleInUrl: true,
 };
+
 /**
  * Get options with defaults
  *
  * @param {Partial<GatsbyI18n.Options>} custom
  * @returns {GatsbyI18n.Options}
  */
+const getOptions = (custom = {}) => ({
+  ...defaultOptions,
+  ...custom,
+});
 
-var getOptions = function getOptions(custom) {
-  if (custom === void 0) {
-    custom = {};
-  }
-
-  return (0, _extends2.default)({}, defaultOptions, custom);
-};
 /**
  * Get configuration with defaults
  *
  * @param {Partial<GatsbyI18n.Config>} custom
  * @returns {GatsbyI18n.Config}
  */
-
-
-var getConfig = function getConfig(custom) {
-  if (custom === void 0) {
-    custom = {};
-  }
-
-  return (0, _extends2.default)({}, defaultConfig, custom);
-};
+const getConfig = (custom = {}) => ({
+  ...defaultConfig,
+  ...custom,
+});
 
 module.exports = {
-  getOptions: getOptions,
-  getConfig: getConfig
+  getOptions,
+  getConfig,
 };

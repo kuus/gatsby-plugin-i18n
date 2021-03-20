@@ -1,6 +1,6 @@
 // @ts-check
 
-const { getI18nOptions, getI18nConfig, getI18nRoutesMap } = require("../utils/internal");
+const { getI18nOptions, getI18nConfig } = require("../utils/internal");
 // const { getOptions } = require("../utils/options");
 
 const sourceNodes = (

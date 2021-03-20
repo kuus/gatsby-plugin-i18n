@@ -2,11 +2,11 @@
 
 import React from "react";
 import { IntlProvider } from "react-intl";
-import { getOptions } from "../utils/options";
-import { logger } from "../utils";
+import { getOptions } from "../../utils/options";
+import { logger } from "../../utils";
 import { I18nProvider } from "./I18nContext";
 import I18nSEO from "./I18nSEO";
-import i18nRoutes from "../.routes.json";
+import i18nRoutes from "../../.routes.json";
 
 const polyfillIntl = (locale) => {
   locale = locale.split("-")[0];

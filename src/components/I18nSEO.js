@@ -2,9 +2,9 @@
 
 import React from "react";
 import { useStaticQuery, graphql } from "gatsby";
-import { findRouteForPath } from "../utils";
 import Helmet from "react-helmet";
-import i18nRoutes from "../.routes.json";
+import { findRouteForPath } from "../../utils";
+import i18nRoutes from "../../.routes.json";
 
 /**
  * Automatically manage i18n related SEO HTML tags.
@@ -18,8 +18,8 @@ import i18nRoutes from "../.routes.json";
  * }>}
  */
 const I18nSEO = ({ i18n, location }) => {
-  const { currentLocale, locales } = i18n;
   const route = findRouteForPath(i18nRoutes, location.pathname);
+  const { currentLocale, locales } = i18n;
   const data = useStaticQuery(graphql`
     {
       site {
@@ -29,35 +29,32 @@ const I18nSEO = ({ i18n, location }) => {
       }
     }
   `);
-      // i18N {
-      //   defaultLocale
-      //   locales
-      // }
+  const baseUrl = data.site.siteMetadata.siteUrl;
+  const alternateLocales = route
+    ? locales.filter((locale) => locale !== currentLocale && !!route[locale])
+    : [];
 
   return (
     <Helmet htmlAttributes={{ lang: currentLocale }}>
       <meta property="og:locale" content={currentLocale.replace("-", "_")} />
-      {route &&
-        locales
-          .filter((locale) => locale !== currentLocale)
-          .map((locale) =>
-            !!route[locale] ? (
-              <React.Fragment key={locale}>
-                <link
-                  rel="alternate"
-                  href={data.site.siteMetadata.siteUrl + route[locale]}
-                  hrefLang={locale}
-                />
-                <meta
-                  key={locale}
-                  property="og:locale:alternate"
-                  content={locale.replace("-", "_")}
-                />
-              </React.Fragment>
-            ) : (
-              ""
-            )
-          )}
+      {locales.length > 1 && (
+        <link rel="alternate" hrefLang="x-default" href={baseUrl} />
+      )}
+      {alternateLocales.map((locale) => (
+        <link
+          key={locale}
+          rel="alternate"
+          hrefLang={locale}
+          href={baseUrl + route[locale]}
+        />
+      ))}
+      {alternateLocales.map((locale) => (
+        <meta
+          key={locale}
+          property="og:locale:alternate"
+          content={locale.replace("-", "_")}
+        />
+      ))}
     </Helmet>
   );
 };

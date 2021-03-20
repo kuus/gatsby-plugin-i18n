@@ -26,6 +26,7 @@ There are [many on `npm`](https://www.npmjs.com/search?q=gatsby%20i18n).
 - [gatsby-plugin-intl-url](https://github.com/vtellier/gatsby-plugin-intl-url)
 - [gatsby-theme-i18n](https://github.com/gatsbyjs/themes/tree/master/packages/gatsby-theme-i18n)
 - [gatsby-plugin-translate-urls](https://www.npmjs.com/package/gatsby-plugin-translate-urls)
+- [gatsby-theme-localization](https://github.com/onestopjs/gatsby-theme-localization)
 
 ## Issues
 

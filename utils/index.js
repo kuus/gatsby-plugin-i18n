@@ -6,13 +6,10 @@
  * @param {"log" | "info" | "error" | "warn"} type Console method
  * @param {string} msg Log message
  */
-var logger = function logger(type, msg) {
-  if (type === void 0) {
-    type = "log";
-  }
-
-  console[type]("[gatsby-i18n]: " + msg);
+const logger = (type = "log", msg) => {
+  console[type](`[gatsby-i18n]: ${msg}`);
 };
+
 /**
  * Normalise URL path
  *
@@ -23,12 +20,11 @@ var logger = function logger(type, msg) {
  * @param {string} input
  * @returns {string}
  */
-
-
-var normaliseUrlPath = function normaliseUrlPath(input) {
+const normaliseUrlPath = (input) => {
   input = input.replace(/\/+\//g, "/") + "/";
-  return "/" + input.replace(/^\/+/, "").replace(/\/+$/, "/");
+  return `/${input.replace(/^\/+/, "").replace(/\/+$/, "/")}`;
 };
+
 /**
  * Normalise route id
  * 
@@ -39,13 +35,12 @@ var normaliseUrlPath = function normaliseUrlPath(input) {
 
  * @param {string} input 
  */
-
-
-var normaliseRouteId = function normaliseRouteId(input) {
+const normaliseRouteId = (input) => {
   // input = input.replace("pages", "");
-  input = normaliseUrlPath("/" + input + "/");
+  input = normaliseUrlPath(`/${input}/`);
   return input;
 };
+
 /**
  * Find route object that matches the given path
  *
@@ -53,24 +48,24 @@ var normaliseRouteId = function normaliseRouteId(input) {
  * @param {string} path The current window.location pathname
  * @returns {GatsbyI18n.Route}
  */
-
-
-var findRouteForPath = function findRouteForPath(routes, path) {
-  var normalisedPath = normaliseUrlPath(path);
-
-  for (var routeKey in routes) {
-    var route = routes[routeKey];
-
-    for (var routeLocale in route) {
+const findRouteForPath = (routes, path) => {
+  const normalisedPath = normaliseUrlPath(path);
+  for (const routeKey in routes) {
+    const route = routes[routeKey];
+    for (const routeLocale in route) {
       // FIXME: check this triple condition, only the second should be enough
-      if (routeKey === normalisedPath || route[routeLocale] === normalisedPath || route[routeLocale].replace("/" + routeLocale, "") === normalisedPath) {
+      if (
+        routeKey === normalisedPath ||
+        route[routeLocale] === normalisedPath ||
+        route[routeLocale].replace(`/${routeLocale}`, "") === normalisedPath
+      ) {
         return route;
       }
     }
   }
-
   return null;
 };
+
 /**
  * Get current route based on browser's location
  *
@@ -78,27 +73,24 @@ var findRouteForPath = function findRouteForPath(routes, path) {
  * @param {string} locale
  * @returns {?string}
  */
-
-
-var getCurrentRoute = function getCurrentRoute(location, locale) {
+const getCurrentRoute = (location, locale) => {
   if (typeof window === "undefined") {
     return;
   }
 
-  var routes = window["___gatsbyI18n"].routes;
-  var matchedRoute = findRouteForPath(routes, location.pathname);
+  const { routes } = window["___gatsbyI18n"];
+  const matchedRoute = findRouteForPath(routes, location.pathname);
 
   if (matchedRoute) {
-    return matchedRoute[locale] || "/" + locale + "/404";
+    return matchedRoute[locale] || `/${locale}/404`;
   }
-
-  return "/" + locale + "/404";
+  return `/${locale}/404`;
 };
 
 module.exports = {
-  logger: logger,
-  normaliseUrlPath: normaliseUrlPath,
-  normaliseRouteId: normaliseRouteId,
-  findRouteForPath: findRouteForPath,
-  getCurrentRoute: getCurrentRoute
+  logger,
+  normaliseUrlPath,
+  normaliseRouteId,
+  findRouteForPath,
+  getCurrentRoute,
 };

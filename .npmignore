@@ -3,6 +3,4 @@ logs
 node_modules
 *.un~
 yarn.lock
-src
-flow-typed
 examples

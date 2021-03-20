@@ -2,12 +2,17 @@
 
 const { getOptions } = require("../utils/options");
 const { logger, normaliseUrlPath } = require("../utils");
-const { extractFromPath, isFileToLocalise } = require("../utils/internal");
+const {
+  extractFromPath,
+  isFileToLocalise,
+  getI18nConfig,
+  getUrlData,
+} = require("../utils/internal");
 
 /**
- * 
+ *
  */
-const onCreateNode = (
+const onCreateNode = async (
   { node, actions, createNodeId, createContentDigest, getNode },
   pluginOptions
 ) => {
@@ -16,7 +21,7 @@ const onCreateNode = (
   // file nodes have absolutePath, markdown nodes have fileAbsolutePath
   switch (node.internal.type) {
     case "File":
-      // fileAbsolutePath = node.absolutePath;
+      fileAbsolutePath = node.absolutePath;
 
       // check file extensions otherwise we get a lot of unneeded files
       if ([".md", ".js", ".jsx", ".ts", ".tsx"].indexOf(node.ext) === -1) {
@@ -38,7 +43,7 @@ const onCreateNode = (
   const options = getOptions(pluginOptions);
   const { createNodeField } = actions;
   let { slug, locale, routeId, fileDir } = extractFromPath(fileAbsolutePath);
-  
+
   // slug can be overriden in each single markdown file
   if (
     node.frontmatter &&
@@ -55,17 +60,11 @@ const onCreateNode = (
 
   const { createNode, createParentChildLink } = actions;
   const routeNodeId = createNodeId(`gatsby-plugin-i18n-route-${routeId}`);
-  let routeNode = getNode(routeNodeId);
-  console.log(routeNode);
-  if (!routeNode) {
-    const routeData = {
-      routeId,
-      fields: {
-        [locale]: slug
-      }
-    };
 
-    createNode({
+  if (!getNode(routeNodeId)) {
+    const routeData = { routeId };
+
+    await createNode({
       ...routeData,
       id: routeNodeId,
       parent: null,
@@ -77,9 +76,13 @@ const onCreateNode = (
         description: "Route by gatsby-plugin-i18n",
       },
     });
-  } else {
-    createNodeField({ node: routeNode, name: locale, value: slug });
   }
+
+  createNodeField({
+    node: getNode(routeNodeId),
+    name: locale,
+    value: getUrlData(getI18nConfig(), locale, slug).url,
+  });
 
   // createParentChildLink({ parent: routeNode, child: node });
 

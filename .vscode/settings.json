@@ -1,8 +1,0 @@
-{
-  "files.exclude": {
-    "*.js": true,
-    "components": true,
-    "gatsby-node": true,
-    "utils": true
-  }
-}

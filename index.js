@@ -19,8 +19,8 @@ export const _ = (id, data) => reactUseIntl().formatMessage({ id }, data);
  */
 export const t = _;
 
-export { default as Link, navigate, changeLocale } from "./components/Link";
+export { default as Link, navigate, changeLocale } from "./src/components/Link";
 
 export { normaliseUrlPath, findRouteForPath, getCurrentRoute } from "./utils";
 
-export { I18nConsumer, useI18n } from "./components/I18nContext";
+export { I18nConsumer, useI18n } from "./src/components/I18nContext";
