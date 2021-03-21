@@ -5,9 +5,10 @@
  */
 const defaultOptions = {
   debug: false,
-  pathConfig: "src/content/settings/i18n/config.yml",
-  pathMessages: "src/content/settings/i18n/messages",
-  pathContent: ["src/content"],
+  // paths
+  configPath: "src/content/settings/i18n/config.yml",
+  messagesPath: "src/content/settings/i18n/messages",
+  contentPaths: ["src/pages", "src/content"],
   // excludePaths: ["admin"],
   excludePaths: [],
   templateName: "tpl.tsx",

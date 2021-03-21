@@ -33,11 +33,6 @@ const onCreateNode = async (
       fileAbsolutePath = node.fileAbsolutePath;
       break;
   }
-
-  // check for strings that contain slashes, for some reasons here we get
-  // absolute paths that are long-seemingly-empty strings
-  if (!fileAbsolutePath) return;
-
   if (!isFileToLocalise(fileAbsolutePath)) return;
 
   const options = getOptions(pluginOptions);
@@ -52,12 +47,16 @@ const onCreateNode = async (
     slug = node.frontmatter[options.frontmatterKeyForLocalisedSlug];
     slug = normaliseUrlPath(slug);
   }
+  const url = getUrlData(getI18nConfig(), locale, slug).url;
 
   createNodeField({ node, name: "locale", value: locale });
   createNodeField({ node, name: "route", value: routeId });
   createNodeField({ node, name: "slug", value: slug });
   createNodeField({ node, name: "fileDir", value: fileDir });
-
+  createNodeField({ node, name: "url", value: url });
+  
+  logger("info", `id:${routeId}; url:${url}`);
+  
   const { createNode, createParentChildLink } = actions;
   const routeNodeId = createNodeId(`gatsby-plugin-i18n-route-${routeId}`);
 
@@ -67,13 +66,13 @@ const onCreateNode = async (
     await createNode({
       ...routeData,
       id: routeNodeId,
-      parent: null,
+      parent: node.id,
       children: [],
       internal: {
         type: "I18nRoute",
         contentDigest: createContentDigest(routeData),
         content: JSON.stringify(routeData),
-        description: "Route by gatsby-plugin-i18n",
+        description: "Route node by gatsby-plugin-i18n",
       },
     });
   }
@@ -81,10 +80,13 @@ const onCreateNode = async (
   createNodeField({
     node: getNode(routeNodeId),
     name: locale,
-    value: getUrlData(getI18nConfig(), locale, slug).url,
+    value: url,
   });
 
-  // createParentChildLink({ parent: routeNode, child: node });
+  // attach the route node as child of the content/page node
+  // @see https://www.gatsbyjs.com/docs/reference/config-files/actions/#createParentChildLink
+  const routeNode = getNode(routeNodeId);
+  createParentChildLink({ parent: node, child: routeNode });
 
   if (options.debug) {
     logger(

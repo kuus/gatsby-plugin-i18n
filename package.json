@@ -22,11 +22,13 @@
   "dependencies": {
     "@formatjs/intl-pluralrules": "^4.0.12",
     "@formatjs/intl-relativetimeformat": "^8.1.3",
+    "babel-plugin-preval": "^5.0.0",
     "intl": "^1.2.5",
     "js-yaml": "^4.0.0",
     "react-intl": "^5.13.3"
   },
   "peerDependencies": {
+    "@types/react-helmet": "^6.1.0",
     "gatsby": "^3.x.x",
     "react": "^17.0.1",
     "react-helmet": "^6.1.0"

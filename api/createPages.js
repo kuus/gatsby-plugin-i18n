@@ -3,7 +3,7 @@
 const nodePath = require("path");
 const fs = require("fs");
 const { getOptions } = require("../utils/options");
-const { logger, normaliseUrlPath } = require("../utils");
+const { logger } = require("../utils");
 const {
   getPageContextData,
   getTemplateBasename,
@@ -18,12 +18,12 @@ const {
  * @returns {string}
  */
 const getPageComponent = (options, node) => {
-  const { pathContent, templateName } = options;
+  const { contentPaths, templateName } = options;
   const { relativePath, frontmatter, fields } = node;
   const { fileDir, slug } = fields;
-  const rightContentPath = Array.isArray(pathContent)
-    ? pathContent[0]
-    : pathContent;
+  const rightContentPath = Array.isArray(contentPaths)
+    ? contentPaths[0]
+    : contentPaths;
   const componentIdealDir = nodePath.join(rightContentPath, fileDir);
   const componentUsualDir = "src/templates";
   let component;
@@ -61,13 +61,13 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   const { createPage, createRedirect } = actions;
   const options = getOptions(pluginOptions);
   const config = getI18nConfig();
-  const { pathContent, templateName } = options;
+  const { contentPaths, templateName } = options;
 
   let rightContentPath = "";
-  if (Array.isArray(pathContent)) {
-    rightContentPath = `(${pathContent.join("|")})`;
+  if (Array.isArray(contentPaths)) {
+    rightContentPath = `(${contentPaths.join("|")})`;
   } else {
-    rightContentPath = pathContent;
+    rightContentPath = contentPaths;
   }
 
   const result = await graphql(`
@@ -123,40 +123,40 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   if (options.untranslatedComponent) {
     for (const routeId in routesMap) {
       const routeData = routesMap[routeId];
-      const routelocales = Object.keys(routeData);
+      const existingLocalisedRoutes = Object.keys(routeData);
 
       // if the translated versions are less then the default set of locales
       // create some untranslated pages
-      if (routelocales.length < config.locales.length) {
+      if (existingLocalisedRoutes.length < config.locales.length) {
         config.locales.forEach((locale) => {
           // bail if the route is already there
           if (routeData[locale]) return;
 
-          const context = { route: routeId, locale };
           // now we need to determine the url path of the untranslated route
-          const routeDefaultPath = routeData[config.defaultLocale];
-          // if it exists use the route's path assigned to the default locale,
-          // otherwise use as path the route id preceded by the current locale
-          let withLocale = routeDefaultPath
-            ? routeDefaultPath.replace(config.defaultLocale, locale)
-            : `${locale}/${routeId}`;
-          // then normalises the URL slashes
-          withLocale = normaliseUrlPath(withLocale);
+          // if it exists try using the url assigned to the default locale
+          // otherwise just use the routeId which is also a valid url slug
+          const slug = routeData[config.defaultLocale] || routeId;
+          const { url } = getUrlData(config, locale, slug);
+          const context = { url, locale };
 
           // add the "untranslated" route to the routes map too
-          routesMap[routeId][locale] = withLocale;
+          routesMap[routeId][locale] = url;
 
-          const availableIn = routelocales.map((locale) => ({
+          const availableIn = existingLocalisedRoutes.map((locale) => ({
             locale,
             to: routesMap[routeId][locale],
           }));
 
           // create page for untranslated content
+          // FIXME: prevent robots to crawl this page, probably use the
+          // `context.robots` in the `gatsby-plugin-sitemap` option query as in
+          // https://github.com/gatsbyjs/gatsby/issues/18896
           createPage({
-            path: withLocale,
+            path: url,
             component: options.untranslatedComponent,
             context: {
               ...context,
+              robots: "noindex,nofollow",
               ...getPageContextData(locale, { availableIn }),
             },
           });
@@ -171,7 +171,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   markdownPages.forEach((node) => {
     const {
       id,
-      fields: { route: routeId, slug, locale },
+      fields: { locale, slug },
     } = node;
     const {
       url,
@@ -180,8 +180,10 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
       isLocaleVisible,
     } = getUrlData(config, locale, slug);
     const component = getPageComponent(options, node);
-    // FIXME: check what we actually need to pass to context
-    const context = { id, /* route: routeId, slug, */ locale };
+    // FIXME: check whether using `id` (not available on untranslated routes above
+    // for now) or `slug` in the page queries used to render a single localised
+    // page
+    const context = { url, locale };
 
     if (options.debug) {
       logger("info", `createPages: create md pages for slug: ${slug}`);

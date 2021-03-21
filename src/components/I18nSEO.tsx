@@ -1,24 +1,19 @@
-// @ts-check
-
 import React from "react";
 import { useStaticQuery, graphql } from "gatsby";
 import Helmet from "react-helmet";
-import { findRouteForPath } from "../../utils";
-import i18nRoutes from "../../.routes.json";
+import { GatsbyI18n } from "../types";
+import { getCurrentRoute } from "../helpers";
 
 /**
  * Automatically manage i18n related SEO HTML tags.
  *
  * About alternate meta tags:
  * @see https://support.google.com/webmasters/answer/189077
- *
- * @type {React.FC<{
- *    i18n: GatsbyI18n.PageContext["i18n"];
- *    location: import("@reach/router").WindowLocation;
- * }>}
  */
-const I18nSEO = ({ i18n, location }) => {
-  const route = findRouteForPath(i18nRoutes, location.pathname);
+const I18nSEO: React.FC<{
+  i18n: GatsbyI18n.PageContext["i18n"];
+}> = ({ i18n }) => {
+  const route = getCurrentRoute();
   const { currentLocale, locales } = i18n;
   const data = useStaticQuery(graphql`
     {

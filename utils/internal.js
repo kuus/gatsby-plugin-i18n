@@ -4,11 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 const { getOptions, getConfig } = require("./options");
-const {
-  logger,
-  normaliseUrlPath,
-  normaliseRouteId,
-} = require(".");
+const { logger, normaliseUrlPath, normaliseRouteId } = require(".");
 
 /**
  * @type {string}
@@ -36,10 +32,10 @@ let routesPath = path.resolve(__dirname, "../", ".routes.json");
  *
  * @param {string} baseDir
  */
- const ensureI18nConfig = (baseDir) => {
-  const { debug, pathConfig } = getI18nOptions();
+const ensureI18nConfig = (baseDir) => {
+  const { debug, configPath: _configPath } = getI18nOptions();
 
-  configPath = path.join(baseDir, pathConfig);
+  configPath = path.join(baseDir, _configPath);
 
   if (!fs.existsSync(configPath)) {
     try {
@@ -191,12 +187,12 @@ const getMessages = (fullPath) => {
 /**
  * If a localised messages file (e.g. `en.yml`) does not exist it creates it
  *
- * @param {string} pathMessages
+ * @param {string} messagesPath
  * @param {string} locale
  * @returns {string} The path of the localised messages file
  */
-const ensureLocalisedMessagesFile = (pathMessages, locale) => {
-  const fullPath = path.join(pathMessages, `${locale}.yml`);
+const ensureLocalisedMessagesFile = (messagesPath, locale) => {
+  const fullPath = path.join(messagesPath, `${locale}.yml`);
   if (!fs.existsSync(fullPath)) {
     fs.writeFileSync(fullPath, "", "utf-8");
   }
@@ -209,10 +205,10 @@ const ensureLocalisedMessagesFile = (pathMessages, locale) => {
  */
 const ensureLocalisedMessagesFiles = () => {
   const { locales } = getI18nConfig();
-  const { pathMessages } = getI18nOptions();
+  const { messagesPath } = getI18nOptions();
 
   locales.forEach((locale) => {
-    ensureLocalisedMessagesFile(pathMessages, locale);
+    ensureLocalisedMessagesFile(messagesPath, locale);
   });
 };
 
@@ -225,10 +221,10 @@ const ensureLocalisedMessagesFiles = () => {
  */
 const getPageContextData = (locale, additional = {}) => {
   const { locales, defaultLocale } = getI18nConfig();
-  const { pathMessages } = getI18nOptions();
+  let { messagesPath } = getI18nOptions();
 
   locale = locale || defaultLocale;
-  const messagesPath = ensureLocalisedMessagesFile(pathMessages, locale);
+  messagesPath = ensureLocalisedMessagesFile(messagesPath, locale);
   const messages = getMessages(messagesPath);
 
   return {
@@ -245,7 +241,7 @@ const getPageContextData = (locale, additional = {}) => {
 /**
  * Extract from path
  *
- * Given the file "/my/page/index.en.md":
+ * Given the file "src/content/my/page/index.en.md":
  * - `routeId` will be e.g. "/my/page"
  * - `slug` will be e.g. "/my/page"
  * - `locale` will be e.g. "en"
@@ -265,7 +261,7 @@ const extractFromPath = (fileAbsolutePath) => {
 /**
  * Extract file parts
  *
- * Given the file "/my/page/index.en.md" `file`'s properties will be:
+ * Given the file "src/content/my/page/index.en.md" `file`'s properties will be:
  * - `dir` e.g. "/my/page"
  * - `name` e.g. "page"
  * - `locale` e.g. "en"
@@ -273,17 +269,17 @@ const extractFromPath = (fileAbsolutePath) => {
  * @param {string} fileAbsolutePath
  */
 const extractFileParts = (fileAbsolutePath) => {
-  const { pathContent } = getI18nOptions();
-  let rightContentPath = "";
-  if (Array.isArray(pathContent)) {
-    const matches = pathContent.filter((p) => fileAbsolutePath.includes(p));
+  const { contentPaths } = getI18nOptions();
+  let foundContentPath = "";
+  if (Array.isArray(contentPaths)) {
+    const matches = contentPaths.filter((p) => fileAbsolutePath.includes(p));
     if (matches) {
-      rightContentPath = matches[0];
+      foundContentPath = matches[0];
     } else {
-      rightContentPath = pathContent[0];
+      foundContentPath = contentPaths[0];
     }
   }
-  const fileRelativePath = fileAbsolutePath.split(rightContentPath)[1];
+  const fileRelativePath = fileAbsolutePath.split(foundContentPath)[1];
   const dir = path.dirname(fileRelativePath);
   let name = path.basename(fileAbsolutePath, ".md");
   name = getTemplateBasename(name);
@@ -347,7 +343,7 @@ const getFileLocale = (file) => {
 /**
  * Is file to localise?
  *
- * It checks that the given file path is within the `pathContent` defined in the
+ * It checks that the given file path is within the `contentPaths` defined in the
  * plugin options and that it is not a template
  *
  * @param {string} filePath
@@ -357,7 +353,7 @@ const isFileToLocalise = (filePath) => {
   if (!filePath) {
     return false;
   }
-  const { pathContent, templateName } = getI18nOptions();
+  const { contentPaths, templateName } = getI18nOptions();
   let isInContentPath = false;
   const extName = path.extname(filePath);
   // console.log(`isFileToLocalise? ${filePath}, with 'extName': ${extName}`)
@@ -366,13 +362,13 @@ const isFileToLocalise = (filePath) => {
   if ([".md", ".mdx", ".js", ".jsx", ".ts", ".tsx"].indexOf(extName) === -1) {
     return false;
   }
-  if (typeof pathContent === "string") {
-    if (filePath.includes(pathContent)) {
+  if (typeof contentPaths === "string") {
+    if (filePath.includes(contentPaths)) {
       isInContentPath = true;
     }
-  } else if (Array.isArray(pathContent)) {
-    for (let i = 0; i < pathContent.length; i++) {
-      if (filePath.includes(pathContent[i])) {
+  } else if (Array.isArray(contentPaths)) {
+    for (let i = 0; i < contentPaths.length; i++) {
+      if (filePath.includes(contentPaths[i])) {
         isInContentPath = true;
         break;
       }
@@ -450,10 +446,10 @@ const reorderLocales = (config) => {
 /**
  * Gives the URL variants and information for the given locale and slug
  * according to the current configuration
- * 
- * @param {GatsbyI18n.Config} config 
- * @param {string} locale 
- * @param {string} slug 
+ *
+ * @param {GatsbyI18n.Config} config
+ * @param {string} locale
+ * @param {string} slug
  */
 const getUrlData = (config, locale, slug) => {
   const urlWithLocale = normaliseUrlPath(`/${locale}/${slug}`);
@@ -464,9 +460,9 @@ const getUrlData = (config, locale, slug) => {
     isLocaleVisible,
     urlWithLocale,
     urlWithoutLocale,
-    url: isLocaleVisible ? urlWithLocale : urlWithoutLocale
-  }
-}
+    url: isLocaleVisible ? urlWithLocale : urlWithoutLocale,
+  };
+};
 
 module.exports = {
   ensureI18nConfig,
@@ -484,5 +480,5 @@ module.exports = {
   shouldCreateLocalisedPage,
   getPage,
   reorderLocales,
-  getUrlData
+  getUrlData,
 };

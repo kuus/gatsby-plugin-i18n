@@ -31,22 +31,6 @@ const sourceNodes = (
       description: "Options for gatsby-plugin-i18n",
     },
   });
-
-  // const routesMap = getI18nRoutesMap();
-
-  // createNode({
-  //   ...routesMap,
-  //   routesMap,
-  //   id: createNodeId("gatsby-plugin-i18n-routes"),
-  //   parent: null,
-  //   children: [],
-  //   internal: {
-  //     type: "I18nRoutes",
-  //     contentDigest: createContentDigest(routesMap),
-  //     content: JSON.stringify(routesMap),
-  //     description: "Routes by gatsby-plugin-i18n",
-  //   },
-  // });
 };
 
 module.exports = sourceNodes;

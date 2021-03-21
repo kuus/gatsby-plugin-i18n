@@ -27,7 +27,7 @@ const {
  * in your `gatsby-node.js`:
  *
  * ```
- * const { onCreatePage } = require("@kuus/gatsby-plugin-i18n/onCreatePage");
+ * const { onCreatePage } = require("@kuus/gatsby-plugin-i18n/api");
  *
  * exports.onCreatePage = ({ page, actions }) => {
  *   onCreatePage({ page, actions });

@@ -1,15 +1,15 @@
-declare namespace GatsbyI18n {
+export namespace GatsbyI18n {
   // type Options = ReturnType<import("./utils/options").getOptions>;
 
-  type Options = {
+  export type Options = {
     /** @default false */
     debug: boolean;
     /** @default "src/content/settings/i18n" */
-    pathConfig: string;
+    configPath: string;
     /** @default "src/content/settings/i18n/messages" */
-    pathMessages: string;
+    messagesPath: string;
     /** @default ["src/content"] */
-    pathContent: string[];
+    contentPaths: string[];
     /** @default ["admin"] */
     excludePaths?: string[];
     /** @default "tpl.tsx" */
@@ -25,7 +25,7 @@ declare namespace GatsbyI18n {
     hasSplatRedirects?: boolean;
   };
 
-  type Config = {
+  export type Config = {
     /** @default  "" */
     baseUrl: string;
     /** @default  ["en"] */
@@ -39,20 +39,24 @@ declare namespace GatsbyI18n {
   };
 
   /** The `key` is the `locale` */
-  type Route = { [key: string]: string };
-  // type RoutesMap = object;
+  export type Route = { [key: string]: string };
+  // export type RoutesMap = object;
   
   /** The `key` is the `routeId` */
-  type RoutesMap = { [key: string]: Route };
-  // type RoutesMap = { [key: string]: { [key: string]: string } };
-  // type RoutesMap = object;
+  export type RoutesMap = { [key: string]: Route };
+  // export type RoutesMap = { [key: string]: { [key: string]: string } };
+  // export type RoutesMap = object;
 
-  type PageContext = {
+  export type PageContext = {
     i18n: {
       locales: string[];
       defaultLocale: string;
       currentLocale: string;
       messages: { [key: string]: string };
+      availableIn?: {
+        to: string;
+        locale: string;
+      }[];
     };
   };
 }

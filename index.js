@@ -12,15 +12,14 @@ export const useIntl = reactUseIntl;
  * @param {object} [data]
  * @returns {string}
  */
-export const _ = (id, data) => reactUseIntl().formatMessage({ id }, data);
+export const t = (id, data) => reactUseIntl().formatMessage({ id }, data);
 
-/**
- * @alias _
- */
-export const t = _;
+export { Link } from "./src/components/Link";
 
-export { default as Link, navigate, changeLocale } from "./src/components/Link";
-
-export { normaliseUrlPath, findRouteForPath, getCurrentRoute } from "./utils";
+export {
+  navigate,
+  changeLocale,
+  getCurrentRoute,
+} from "./src/helpers";
 
 export { I18nConsumer, useI18n } from "./src/components/I18nContext";

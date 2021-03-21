@@ -41,56 +41,8 @@ const normaliseRouteId = (input) => {
   return input;
 };
 
-/**
- * Find route object that matches the given path
- *
- * @param {GatsbyI18n.RoutesMap} routes
- * @param {string} path The current window.location pathname
- * @returns {GatsbyI18n.Route}
- */
-const findRouteForPath = (routes, path) => {
-  const normalisedPath = normaliseUrlPath(path);
-  for (const routeKey in routes) {
-    const route = routes[routeKey];
-    for (const routeLocale in route) {
-      // FIXME: check this triple condition, only the second should be enough
-      if (
-        routeKey === normalisedPath ||
-        route[routeLocale] === normalisedPath ||
-        route[routeLocale].replace(`/${routeLocale}`, "") === normalisedPath
-      ) {
-        return route;
-      }
-    }
-  }
-  return null;
-};
-
-/**
- * Get current route based on browser's location
- *
- * @param {import("@reach/router").WindowLocation} location
- * @param {string} locale
- * @returns {?string}
- */
-const getCurrentRoute = (location, locale) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const { routes } = window["___gatsbyI18n"];
-  const matchedRoute = findRouteForPath(routes, location.pathname);
-
-  if (matchedRoute) {
-    return matchedRoute[locale] || `/${locale}/404`;
-  }
-  return `/${locale}/404`;
-};
-
 module.exports = {
   logger,
   normaliseUrlPath,
   normaliseRouteId,
-  findRouteForPath,
-  getCurrentRoute,
 };

@@ -1,12 +1,11 @@
-// @ts-check
-
 import React from "react";
+import { WrapPageElementBrowserArgs } from "gatsby";
 import { IntlProvider } from "react-intl";
 import { getOptions } from "../../utils/options";
 import { logger } from "../../utils";
 import { I18nProvider } from "./I18nContext";
 import I18nSEO from "./I18nSEO";
-import i18nRoutes from "../../.routes.json";
+import { GatsbyI18n } from "../types";
 
 const polyfillIntl = (locale) => {
   locale = locale.split("-")[0];
@@ -27,12 +26,11 @@ const polyfillIntl = (locale) => {
 
 /**
  * Wrap page element component
- *
- * @param {import("gatsby").WrapPageElementBrowserArgs<{}, GatsbyI18n.PageContext>} args
- * @param {GatsbyI18n.Options} pluginOptions
- * @returns
  */
-const WrapPageElement = ({ element, props }, pluginOptions) => {
+const WrapPageElement = (
+  { element, props }: WrapPageElementBrowserArgs<{}, GatsbyI18n.PageContext>,
+  pluginOptions: GatsbyI18n.Options
+) => {
   if (!props) {
     return;
   }
@@ -50,10 +48,6 @@ const WrapPageElement = ({ element, props }, pluginOptions) => {
     return element;
   }
 
-  if (typeof window !== "undefined") {
-    window["___gatsbyI18n"] = { ...i18n, routes: i18nRoutes };
-  }
-
   // polyfillIntl(i18n.currentLocale);
 
   return (
@@ -63,7 +57,7 @@ const WrapPageElement = ({ element, props }, pluginOptions) => {
       messages={i18n.messages}
     >
       <I18nProvider value={i18n}>
-        <I18nSEO i18n={i18n} location={props.location} />
+        <I18nSEO i18n={i18n} />
         {element}
       </I18nProvider>
     </IntlProvider>
