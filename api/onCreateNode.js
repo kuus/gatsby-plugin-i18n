@@ -18,16 +18,8 @@ const onCreateNode = async (
 ) => {
   let fileAbsolutePath;
 
-  // file nodes have absolutePath, markdown nodes have fileAbsolutePath
+  // markdown nodes have fileAbsolutePath
   switch (node.internal.type) {
-    case "File":
-      fileAbsolutePath = node.absolutePath;
-
-      // check file extensions otherwise we get a lot of unneeded files
-      if ([".md", ".js", ".jsx", ".ts", ".tsx"].indexOf(node.ext) === -1) {
-        return;
-      }
-      break;
     case "MarkdownRemark":
     case "Mdx":
       fileAbsolutePath = node.fileAbsolutePath;
@@ -55,7 +47,7 @@ const onCreateNode = async (
   createNodeField({ node, name: "fileDir", value: fileDir });
   createNodeField({ node, name: "url", value: url });
   
-  logger("info", `id:${routeId}; url:${url}`);
+  // logger("info", `id:${routeId}; url:${url}`);
   
   const { createNode, createParentChildLink } = actions;
   const routeNodeId = createNodeId(`gatsby-plugin-i18n-route-${routeId}`);

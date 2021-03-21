@@ -72,18 +72,9 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
 
   const result = await graphql(`
     query {
-      allFile(filter: {
-        absolutePath: {regex: "${new RegExp(rightContentPath)}"},
-        ext: {in: [".js", ".jsx", ".ts", ".tsx"]},
-        name: {nin: ["${getTemplateBasename(templateName)}"]}
-      }) {
-        nodes {
-          id
-          relativePath
-        }
-      }
       allMarkdown: ${options.useMdx ? "allMdx" : "allMarkdownRemark"}(
         filter: {
+          fileAbsolutePath: {regex: "${new RegExp(rightContentPath)}"},
           frontmatter: { template: { ne: null } }
         }
       ) {
@@ -105,13 +96,11 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     }
   `);
 
-  const filePages = result.data.allFile.nodes;
   const markdownPages = result.data.allMarkdown.nodes;
-  const allPages = markdownPages.concat(filePages);
   const routesMap = /** @type {GatsbyI18n.RoutesMap} */ ({});
 
   // build routes map
-  allPages.forEach((node) => {
+  markdownPages.forEach((node) => {
     const { slug, locale, route: routeId } = node.fields;
     const { url } = getUrlData(config, locale, slug);
 
