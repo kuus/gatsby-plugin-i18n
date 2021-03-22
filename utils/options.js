@@ -53,6 +53,7 @@ const getConfig = (custom = {}) => ({
 });
 
 module.exports = {
+  defaultConfig,
   getOptions,
   getConfig,
 };

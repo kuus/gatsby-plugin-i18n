@@ -10,7 +10,7 @@ export const I18nSwitchLinks: FC<{}> = () => {
       {locales.map((locale) => (
         <Link
           key={locale}
-          to={route[locale]}
+          to={route.locales[locale]}
           style={{
             fontWeight: currentLocale === locale ? 600 : 300,
           }}

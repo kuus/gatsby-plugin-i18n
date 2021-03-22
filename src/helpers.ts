@@ -16,16 +16,21 @@ export const useIntl = reactUseIntl;
 export const t = (id: string, data: { [key: string]: string }): string => reactUseIntl().formatMessage({ id }, data);
 
 /**
- * Find route object that matches the given path
+ * Find route object that matches the given URL path
  */
-export const findRouteForPath = (path: string): undefined | GatsbyI18n.Route => {
-  const normalisedPath = normaliseUrlPath(path);
-  for (const routeKey in i18nRoutes) {
-    const route = i18nRoutes[routeKey];
+export const getRouteByUrlPath = (urlPath: string): undefined | {
+  id: string;
+  locales: GatsbyI18n.Route
+ } => {
+  const normalisedPath = normaliseUrlPath(urlPath);
+  for (const routeId in i18nRoutes) {
+    const route = i18nRoutes[routeId];
     for (const routeLocale in route) {
-      // FIXME: check this triple condition, only the second should be enough
       if (route[routeLocale] === normalisedPath) {
-        return route;
+        return {
+          id: routeId,
+          locales: route
+        };
       }
     }
   }
@@ -33,12 +38,12 @@ export const findRouteForPath = (path: string): undefined | GatsbyI18n.Route => 
 };
 
 /**
- * Get current route based on browser's location
+ * Get current route locales based on browser's location
  */
-export const getCurrentRoute = (): undefined | GatsbyI18n.Route => {
+ export const getCurrentRoute = ()=> {
   const { location } = globalHistory;
 
-  return findRouteForPath(location.pathname);
+  return getRouteByUrlPath(location.pathname);
 };
 
 /**
@@ -107,10 +112,10 @@ export const getDestinationSQ = (i18n: GatsbyI18n.I18n, routeId: string, locale?
  */
 export const navigate = <T extends {}>(
   i18n: GatsbyI18n.I18n,
-  to: string,
+  route: string,
   options: NavigateOptions<T>
 ) => {
-  const destination = getDestination(i18n, to);
+  const destination = getDestination(i18n, route);
   gatsbyNavigate(destination, options);
 };
 
@@ -119,8 +124,9 @@ export const navigate = <T extends {}>(
  */
 export const changeLocale = (i18n: GatsbyI18n.I18n, locale: string) => {
   const route = getCurrentRoute();
+
   if (route) {
-    const destination = getDestination(i18n, route[locale], locale);
+    const destination = getDestination(i18n, route.id, locale);
   
     localStorage.setItem("gatsby-i18n-locale", locale);
   

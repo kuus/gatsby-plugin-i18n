@@ -23,8 +23,8 @@ export const I18nSEO: React.FC<{}> = () => {
     }
   `);
   const baseUrl = data.site.siteMetadata.siteUrl;
-  const alternateLocales = route
-    ? locales.filter((locale) => locale !== currentLocale && !!route[locale])
+  const alternateLocales = route.locales
+    ? locales.filter((locale) => locale !== currentLocale && !!route.locales[locale])
     : [];
 
   return (
@@ -38,7 +38,7 @@ export const I18nSEO: React.FC<{}> = () => {
           key={locale}
           rel="alternate"
           hrefLang={locale}
-          href={baseUrl + route[locale]}
+          href={baseUrl + route.locales[locale]}
         />
       ))}
       {alternateLocales.map((locale) => (

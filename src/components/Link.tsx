@@ -1,5 +1,6 @@
 import React, { FC } from "react";
 import { Link as GatsbyLink } from "gatsby";
+import { useI18n } from "./I18nContext";
 import { getDestination } from "../helpers";
 
 /**
@@ -16,7 +17,8 @@ export const Link: FC<{
   onClick?: Function;
 }> = ({ route, locale, params, onClick, ...props }) => {
   if (route) {
-    let to = getDestination(route, locale);
+    const i18n = useI18n();
+    let to = getDestination(i18n, route, locale);
 
     if (to) {
       const handleClick = (e) => {

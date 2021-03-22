@@ -1,5 +1,6 @@
 import React from "react";
 import { Link as GatsbyLink, GatsbyLinkProps } from "gatsby";
+import { useI18n } from "./I18nContext";
 import { getDestinationSQ } from "../helpers";
 
 type GatsbyI18nLinkProps<TState> = Omit<GatsbyLinkProps<TState>, "to"> & {
@@ -21,7 +22,8 @@ export const Link = <TState extends {}>({
   ...props
 }: GatsbyI18nLinkProps<TState>) => {
   if (route) {
-    const to = getDestinationSQ(route, locale);
+    const i18n = useI18n();
+    const to = getDestinationSQ(i18n, route, locale);
 
     if (to) {
       return <GatsbyLink {...props} to={to} />;
