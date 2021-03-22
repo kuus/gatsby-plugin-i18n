@@ -5,6 +5,10 @@ export const I18nSwitchLinks: FC<{}> = () => {
   const { locales, currentLocale } = useI18n();
   const route = getCurrentRoute();
   // const localesAvailableForCurrentRoute = Object.keys(route);
+  if (!route) {
+    return null;
+  }
+
   return (
     <>
       {locales.map((locale) => (

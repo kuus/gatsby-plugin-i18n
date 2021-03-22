@@ -355,7 +355,7 @@ const isFileToLocalise = (filePath) => {
   const { contentPaths, templateName } = getI18nOptions();
   let isInContentPath = false;
   const extName = path.extname(filePath);
-  // console.log(`isFileToLocalise? ${filePath}, with 'extName': ${extName}`)
+  // logger("info", `isFileToLocalise? ${filePath}, with extName: ${extName}`);
 
   // disregard file types other than markdown and templates
   if ([".md", ".mdx", ".js", ".jsx", ".ts", ".tsx"].indexOf(extName) === -1) {

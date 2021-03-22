@@ -39,11 +39,13 @@ export const getRouteByUrlPath = (urlPath: string): undefined | {
 
 /**
  * Get current route locales based on browser's location
+ * 
+ * The replace is only needed for the `404.html` page.
  */
  export const getCurrentRoute = ()=> {
   const { location } = globalHistory;
 
-  return getRouteByUrlPath(location.pathname);
+  return getRouteByUrlPath(location.pathname.replace(".html", ""));
 };
 
 /**

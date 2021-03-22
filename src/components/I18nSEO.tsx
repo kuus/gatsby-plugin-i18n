@@ -12,6 +12,9 @@ import { useI18n } from "./I18nContext";
  */
 export const I18nSEO: React.FC<{}> = () => {
   const route = getCurrentRoute();
+  if (!route) {
+    return null;
+  }
   const { currentLocale, locales } = useI18n();
   const data = useStaticQuery(graphql`
     {
