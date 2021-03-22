@@ -48,5 +48,3 @@ export const Link: FC<{
 
   return <GatsbyLink onClick={onClick} {...props} />;
 };
-
-export default Link;

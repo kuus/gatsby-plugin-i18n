@@ -245,7 +245,6 @@ const getPageContextData = (locale, additional = {}) => {
  * - `routeId` will be e.g. "/my/page"
  * - `slug` will be e.g. "/my/page"
  * - `locale` will be e.g. "en"
- * - `fileDir` will be e.g. "/my/page"
  *
  * @param {string} fileAbsolutePath
  */
@@ -255,7 +254,7 @@ const extractFromPath = (fileAbsolutePath) => {
   const slug = getFileSlug(file);
   const locale = getFileLocale(file);
 
-  return { routeId, slug, locale, fileDir: file.dir };
+  return { routeId, slug, locale };
 };
 
 /**

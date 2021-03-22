@@ -1,8 +1,8 @@
 import React from "react";
 import { useStaticQuery, graphql } from "gatsby";
 import Helmet from "react-helmet";
-import { GatsbyI18n } from "../types";
 import { getCurrentRoute } from "../helpers";
+import { useI18n } from "./I18nContext";
 
 /**
  * Automatically manage i18n related SEO HTML tags.
@@ -10,11 +10,9 @@ import { getCurrentRoute } from "../helpers";
  * About alternate meta tags:
  * @see https://support.google.com/webmasters/answer/189077
  */
-const I18nSEO: React.FC<{
-  i18n: GatsbyI18n.PageContext["i18n"];
-}> = ({ i18n }) => {
+export const I18nSEO: React.FC<{}> = () => {
   const route = getCurrentRoute();
-  const { currentLocale, locales } = i18n;
+  const { currentLocale, locales } = useI18n();
   const data = useStaticQuery(graphql`
     {
       site {
@@ -53,5 +51,3 @@ const I18nSEO: React.FC<{
     </Helmet>
   );
 };
-
-export default I18nSEO;

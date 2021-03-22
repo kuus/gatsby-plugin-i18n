@@ -1,9 +1,19 @@
+import { useIntl as reactUseIntl } from "react-intl";
 import { graphql, useStaticQuery, navigate as gatsbyNavigate } from "gatsby";
 import { globalHistory, NavigateOptions } from "@reach/router";
 import { GatsbyI18n } from "./types";
-import { useI18n } from "./components/I18nContext";
 import { normaliseUrlPath, normaliseRouteId } from "../utils";
 import i18nRoutes from "../.routes.json";
+
+/**
+ * Alias export for `useIntl` from `react-intl`, to ease import statements
+ */
+export const useIntl = reactUseIntl;
+
+/**
+ * Output a translated string by id, a shortcut to `useIntl().formatMessage`
+ */
+export const t = (id: string, data: { [key: string]: string }): string => reactUseIntl().formatMessage({ id }, data);
 
 /**
  * Find route object that matches the given path
@@ -41,8 +51,7 @@ export const getCurrentRoute = (): undefined | GatsbyI18n.Route => {
  * @param {string} [locale] It fallbacks to the currentLocale set on i18n page context
  * @returns {string} The URL destination
  */
-export const getDestination = (routeId: string, locale?: string): string => {
-  const i18n = useI18n();
+export const getDestination = (i18n: GatsbyI18n.I18n, routeId: string, locale?: string): string => {
   locale = locale || i18n.currentLocale;
   const route = i18nRoutes[normaliseRouteId(routeId)];
   // TODO: maybe throw an error instead of returning the defaultLocale url
@@ -58,8 +67,7 @@ export const getDestination = (routeId: string, locale?: string): string => {
 /**
  * @inheritdoc(getDestination)
  */
-export const getDestinationSQ = (routeId: string, locale?: string): string => {
-  const i18n = useI18n();
+export const getDestinationSQ = (i18n: GatsbyI18n.I18n, routeId: string, locale?: string): string => {
   locale = locale || i18n.currentLocale;
   routeId = normaliseRouteId(routeId);
   const data = useStaticQuery(graphql`
@@ -98,20 +106,21 @@ export const getDestinationSQ = (routeId: string, locale?: string): string => {
  * @see https://www.gatsbyjs.com/docs/reference/built-in-components/gatsby-link/#how-to-use-the-navigate-helper-function
  */
 export const navigate = <T extends {}>(
+  i18n: GatsbyI18n.I18n,
   to: string,
   options: NavigateOptions<T>
 ) => {
-  const destination = getDestination(to);
+  const destination = getDestination(i18n, to);
   gatsbyNavigate(destination, options);
 };
 
 /**
- * Change locale helper, to be used in I18nSwitcher component
+ * Change locale helper, to be used in I18nSwitch component
  */
-export const changeLocale = (locale: string) => {
+export const changeLocale = (i18n: GatsbyI18n.I18n, locale: string) => {
   const route = getCurrentRoute();
   if (route) {
-    const destination = getDestination(route[locale], locale);
+    const destination = getDestination(i18n, route[locale], locale);
   
     localStorage.setItem("gatsby-i18n-locale", locale);
   

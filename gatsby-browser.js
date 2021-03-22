@@ -1,1 +1,1 @@
-export { default as wrapPageElement } from "./src/components/WrapPageElement";
+export { wrapPageElement } from "./src/components/wrapPageElement";

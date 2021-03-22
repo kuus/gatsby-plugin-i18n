@@ -1,12 +1,11 @@
 // @ts-check
 
-const nodePath = require("path");
+const path = require("path");
 const fs = require("fs");
 const { getOptions } = require("../utils/options");
 const { logger } = require("../utils");
 const {
   getPageContextData,
-  getTemplateBasename,
   addI18nRoutesMappings,
   getUrlData,
   getI18nConfig,
@@ -18,33 +17,25 @@ const {
  * @returns {string}
  */
 const getPageComponent = (options, node) => {
-  const { contentPaths, templateName } = options;
-  const { relativePath, frontmatter, fields } = node;
-  const { fileDir, slug } = fields;
-  const rightContentPath = Array.isArray(contentPaths)
-    ? contentPaths[0]
-    : contentPaths;
-  const componentIdealDir = nodePath.join(rightContentPath, fileDir);
-  const componentUsualDir = "src/templates";
+  const { templateName } = options;
+  const defaultDir = "src/templates";
+  const relativeDir = path.dirname(node.fileAbsolutePath);
   let component;
 
-  if (frontmatter.template) {
-    component = nodePath.resolve(
-      componentUsualDir,
-      `${frontmatter.template}.tsx` // TODO: js/ts format support
-    );
-  } else if (relativePath) {
-    component = nodePath.resolve(rightContentPath, relativePath);
+  if (node.frontmatter.template) {
+    // TODO: js/ts format support
+    component = path.resolve(defaultDir, `${node.frontmatter.template}.tsx`);
   } else {
-    component = nodePath.resolve(componentIdealDir, templateName);
+    component = path.resolve(relativeDir, templateName);
+    
 
     if (!fs.existsSync(component)) {
       if (templateName) {
         logger(
           "info",
           `You can create a file "${templateName}" in the folder` +
-            ` "${componentIdealDir}" instead of declaring it explicitly in the` +
-            ` frontmatter section of the page ${slug}.`
+            ` "${relativeDir}" instead of declaring it explicitly in the` +
+            ` frontmatter section of the page.`
         );
       }
     }
@@ -61,30 +52,30 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   const { createPage, createRedirect } = actions;
   const options = getOptions(pluginOptions);
   const config = getI18nConfig();
-  const { contentPaths, templateName } = options;
+  const { contentPaths } = options;
 
-  let rightContentPath = "";
+  let contentPathReg = "";
   if (Array.isArray(contentPaths)) {
-    rightContentPath = `(${contentPaths.join("|")})`;
+    contentPathReg = `(${contentPaths.join("|")})`;
   } else {
-    rightContentPath = contentPaths;
+    contentPathReg = contentPaths;
   }
 
   const result = await graphql(`
     query {
       allMarkdown: ${options.useMdx ? "allMdx" : "allMarkdownRemark"}(
         filter: {
-          fileAbsolutePath: {regex: "${new RegExp(rightContentPath)}"},
-          frontmatter: { template: { ne: null } }
+          fileAbsolutePath: {regex: "${new RegExp(contentPathReg)}"},
+          fields: { route: { ne: null } }
         }
       ) {
         nodes {
-          id
+          url
+          fileAbsolutePath
           fields {
-            slug
-            locale
-            fileDir
             route
+            locale
+            slug
           }
           frontmatter {
             template
@@ -99,16 +90,55 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   const markdownPages = result.data.allMarkdown.nodes;
   const routesMap = /** @type {GatsbyI18n.RoutesMap} */ ({});
 
-  // build routes map
+  // create all markdown pages, the file ones, instead, are handled by gatsby
+  // through the createStatefulPages lifecycle and are therefore just treated in
+  // the `onCreatePage` of the specific project using this plugin
   markdownPages.forEach((node) => {
-    const { slug, locale, route: routeId } = node.fields;
-    const { url } = getUrlData(config, locale, slug);
+    const {
+      fields: { locale, slug, route: routeId },
+    } = node;
+    const { url, urlWithLocale, urlWithoutLocale, isLocaleVisible } = getUrlData(
+      config,
+      locale,
+      slug
+    );
+    const component = getPageComponent(options, node);
+    // we use `url` instead of `id` in the page queries to render a single
+    // localised page, as the above untranslated components do not have a known
+    // `id` to use at this point. The `url`s are unique as well anyway.
+    const context = { url, locale };
 
+    if (options.debug) {
+      logger("info", `createPages: create md pages for slug: ${slug}`);
+    }
+
+    // create page with right URLs
+    createPage({
+      path: url,
+      matchPath: url,
+      component,
+      context: {
+        ...context,
+        ...getPageContextData(locale),
+      },
+    });
+
+    // always create redirects for the default locale either one way or the
+    // other (with->without or without->with)
+    if (!options.hasSplatRedirects && locale === config.defaultLocale) {
+      createRedirect({
+        fromPath: isLocaleVisible ? urlWithoutLocale : urlWithLocale,
+        toPath: isLocaleVisible ? urlWithLocale : urlWithoutLocale,
+        isPermanent: true,
+      });
+    }
+
+    // add to routes map
     routesMap[routeId] = routesMap[routeId] || {};
     routesMap[routeId][locale] = url;
   });
 
-  // add fallback page for untraslated routes
+  // add fallback page for untranslated routes
   if (options.untranslatedComponent) {
     for (const routeId in routesMap) {
       const routeData = routesMap[routeId];
@@ -142,6 +172,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
           // https://github.com/gatsbyjs/gatsby/issues/18896
           createPage({
             path: url,
+            matchPath: url,
             component: options.untranslatedComponent,
             context: {
               ...context,
@@ -153,51 +184,6 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
       }
     }
   }
-
-  // create all markdown pages, the file ones, instead, are handled by gatsby
-  // through the createStatefulPages lifecycle and are therefore just treated in
-  // the `onCreatePage` of the specific project using this plugin
-  markdownPages.forEach((node) => {
-    const {
-      id,
-      fields: { locale, slug },
-    } = node;
-    const {
-      url,
-      urlWithLocale,
-      urlWithoutLocale,
-      isLocaleVisible,
-    } = getUrlData(config, locale, slug);
-    const component = getPageComponent(options, node);
-    // FIXME: check whether using `id` (not available on untranslated routes above
-    // for now) or `slug` in the page queries used to render a single localised
-    // page
-    const context = { url, locale };
-
-    if (options.debug) {
-      logger("info", `createPages: create md pages for slug: ${slug}`);
-    }
-
-    // create page with right URLs
-    createPage({
-      path: url,
-      component,
-      context: {
-        ...context,
-        ...getPageContextData(locale),
-      },
-    });
-
-    // always create redirects for the default locale either one way or the
-    // other (with->without or without->with)
-    if (!options.hasSplatRedirects && locale === config.defaultLocale) {
-      createRedirect({
-        fromPath: isLocaleVisible ? urlWithoutLocale : urlWithLocale,
-        toPath: isLocaleVisible ? urlWithLocale : urlWithoutLocale,
-        isPermanent: true,
-      });
-    }
-  });
 
   addI18nRoutesMappings(routesMap);
 };

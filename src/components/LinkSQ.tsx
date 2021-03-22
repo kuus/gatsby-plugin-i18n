@@ -15,7 +15,7 @@ type GatsbyI18nLinkProps<TState> = Omit<GatsbyLinkProps<TState>, "to"> & {
   // children?: ReactNode;
 };
 
-const Link = <TState extends {}>({
+export const Link = <TState extends {}>({
   route,
   locale,
   ...props
@@ -30,5 +30,3 @@ const Link = <TState extends {}>({
 
   return <GatsbyLink {...props} />;
 };
-
-export default Link;

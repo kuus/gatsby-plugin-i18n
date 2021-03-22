@@ -47,16 +47,18 @@ export namespace GatsbyI18n {
   // export type RoutesMap = { [key: string]: { [key: string]: string } };
   // export type RoutesMap = object;
 
+  export type I18n = {
+    locales: string[];
+    defaultLocale: string;
+    currentLocale: string;
+    messages: { [key: string]: string };
+    availableIn?: {
+      to: string;
+      locale: string;
+    }[];
+  }; 
+  
   export type PageContext = {
-    i18n: {
-      locales: string[];
-      defaultLocale: string;
-      currentLocale: string;
-      messages: { [key: string]: string };
-      availableIn?: {
-        to: string;
-        locale: string;
-      }[];
-    };
-  };
+    i18n: I18n;
+  }; 
 }

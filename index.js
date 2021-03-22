@@ -1,25 +1,13 @@
-import { useIntl as reactUseIntl } from "react-intl";
-
-// export * from "react-intl";
-export { FormattedMessage } from "react-intl";
-
-export const useIntl = reactUseIntl;
-
-/**
- * Output a translated string by id, a shortcut to `useIntl().formatMessage`
- *
- * @param {string} id
- * @param {object} [data]
- * @returns {string}
- */
-export const t = (id, data) => reactUseIntl().formatMessage({ id }, data);
-
+export { I18nConsumer, useI18n } from "./src/components/I18nContext";
 export { Link } from "./src/components/Link";
+export { I18nSwitch } from "./src/components/I18nSwitch";
+export { I18nSwitchLinks } from "./src/components/I18nSwitchLinks";
+export { I18nSwitchSelect } from "./src/components/I18nSwitchSelect";
 
 export {
   navigate,
   changeLocale,
   getCurrentRoute,
+  useIntl,
+  t
 } from "./src/helpers";
-
-export { I18nConsumer, useI18n } from "./src/components/I18nContext";

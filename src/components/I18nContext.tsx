@@ -8,4 +8,7 @@ const I18nContext = React.createContext<
 export const I18nProvider = I18nContext.Provider;
 export const I18nConsumer = I18nContext.Consumer;
 
-export const useI18n = () => useContext(I18nContext);
+export const useI18n = () => {
+  const i18n = useContext(I18nContext);
+  return i18n;
+};

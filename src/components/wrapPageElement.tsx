@@ -4,7 +4,7 @@ import { IntlProvider } from "react-intl";
 import { getOptions } from "../../utils/options";
 import { logger } from "../../utils";
 import { I18nProvider } from "./I18nContext";
-import I18nSEO from "./I18nSEO";
+import { I18nSEO } from "./I18nSEO";
 import { GatsbyI18n } from "../types";
 
 const polyfillIntl = (locale) => {
@@ -26,8 +26,11 @@ const polyfillIntl = (locale) => {
 
 /**
  * Wrap page element component
+ *
+ * It wraps everything into the two needed i18n providers and add i18n related
+ * SEO by default
  */
-const WrapPageElement = (
+export const wrapPageElement = (
   { element, props }: WrapPageElementBrowserArgs<{}, GatsbyI18n.PageContext>,
   pluginOptions: GatsbyI18n.Options
 ) => {
@@ -38,13 +41,16 @@ const WrapPageElement = (
   const { i18n } = props.pageContext;
 
   if (!i18n) {
-    const options = getOptions(pluginOptions);
-    if (options.debug) {
-      logger(
-        "info",
-        `No 'i18n' in WrapPageElement props ${props.location.pathname}`
-      );
+    if (process.env.NODE_ENV === "development") {
+      const options = getOptions(pluginOptions);
+      if (options.debug) {
+        logger(
+          "info",
+          `No 'i18n' in wrapPageElement props ${props.location.pathname}`
+        );
+      }
     }
+
     return element;
   }
 
@@ -57,11 +63,9 @@ const WrapPageElement = (
       messages={i18n.messages}
     >
       <I18nProvider value={i18n}>
-        <I18nSEO i18n={i18n} />
+        <I18nSEO />
         {element}
       </I18nProvider>
     </IntlProvider>
   );
 };
-
-export default WrapPageElement;
