@@ -42,26 +42,26 @@ const createSchemaCustomization = ({ actions }) => {
         async resolve(source, args, context) {
           const children = await context.nodeModel.getNodesByIds({
             ids: source.children,
-            type: "I18nRoute"
+            type: "I18nRoute",
           });
           const childRoute = children[0];
-          
+
           if (childRoute) {
             const fields = childRoute.fields || {};
             const locale = args.locale != null ? args.locale : options.locale;
-            // const 
+            // const
             if (fields[locale]) {
               return fields[locale].url;
             }
           }
-            
+
           return null;
         },
-      }
+      };
     },
   });
 
-  // add `locales` on Mdx and File nodes without having it nested within the 
+  // add `locales` on Mdx and File nodes without having it nested within the
   // `fields` object, this is just to easier the "link->to" data retrieval
   // Note: the fields.locale_{locale} is add in the `onCreateNode` api
   createFieldExtension({
@@ -81,10 +81,9 @@ const createSchemaCustomization = ({ actions }) => {
           }
           return null;
         },
-      }
+      };
     },
-  })
-
+  });
 
   // add `isRoute` on Mdx and File nodes this is just to easier the filtering
   // in the queries when wanting to retrieve route links
@@ -98,9 +97,9 @@ const createSchemaCustomization = ({ actions }) => {
           }
           return null;
         },
-      }
+      };
     },
-  })
+  });
 
   // TODO: support also MarkdownRemark other than Mdx?
   createTypes(`
@@ -114,7 +113,7 @@ const createSchemaCustomization = ({ actions }) => {
       locales: [String] @locales
       route: String @route
     }
-  `)
+  `);
 
   // code examples from gatsby-theme-i18n:
   // createTypes(`

@@ -17,8 +17,9 @@ const { parse } = require("comment-parser/lib");
 const getSlugsFromComment = (source) => {
   const parsed = parse(source);
   const comment =
-    parsed.filter((block) => block.description.toLowerCase().includes("i18n"))[0] ||
-    null;
+    parsed.filter((block) =>
+      block.description.toLowerCase().includes("i18n")
+    )[0] || null;
   if (!comment) {
     return {};
   }
@@ -29,13 +30,13 @@ const getSlugsFromComment = (source) => {
       output[tag.type] = tag.name;
       return output;
     }, {});
-  
-    return slugs;
-}
+
+  return slugs;
+};
 // const stringified = JSON.stringify(getSlugsFromComment(source));
 
 // end copying --------
 
 module.exports = {
-  getSlugsFromComment
-}
+  getSlugsFromComment,
+};

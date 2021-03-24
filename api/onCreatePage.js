@@ -55,7 +55,7 @@ const onCreatePage = ({ page, actions }) => {
   } else {
     // always delete pages that are loosely placed as `.js/.tsx` files in
     // `src/pages`. Those recreated and localised in the `createPages` api
-    // this only works in tandem with disabling the built-in 
+    // this only works in tandem with disabling the built-in
     // `gatsby-plugin-page-creator`, the easier way to set that is by
     // setting it in this theme options
     // {

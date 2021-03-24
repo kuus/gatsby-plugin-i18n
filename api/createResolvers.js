@@ -33,9 +33,7 @@ const createResolvers = ({ createResolvers }) => {
   //     //   },
   //     //   resolve(source, args, context, info) {
   //     //     console.log("loggg info:", info, "source", source, "args", args);
-
   //     //     // const a = context.nodeModel.getNodeById("gatsby-plugin-i18n-config");
-
   //     //     const data = context.nodeModel.runQuery({
   //     //       query: {
   //     //         filter: {
@@ -63,7 +61,6 @@ const createResolvers = ({ createResolvers }) => {
   //     // },
   //   },
   // };
-
   // createResolvers(resolvers);
 };
 

@@ -19,7 +19,7 @@ const pluginOptionsSchema = ({ Joi }) => {
     // frontmatterKeyForLocalisedSlug: "slug",
     // // netlify/server related options:
     // hasSplatRedirects: true,
-  })
-}
+  });
+};
 
 module.exports = pluginOptionsSchema;

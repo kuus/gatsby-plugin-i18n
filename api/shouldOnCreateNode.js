@@ -28,7 +28,10 @@ const shouldOnCreateNode = ({ node }, pluginOptions) => {
 
   // disregard File nodes other than mdx and templates, `.md` files are just
   // treated generally speaking as Markdown nodes
-  if (node.internal.type === "File" && ![".mdx", ".js", ".jsx", ".ts", ".tsx"].includes(ext)) {
+  if (
+    node.internal.type === "File" &&
+    ![".mdx", ".js", ".jsx", ".ts", ".tsx"].includes(ext)
+  ) {
     return false;
   }
 

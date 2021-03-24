@@ -14,15 +14,16 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   const options = getOptions(pluginOptions);
   const config = getI18nConfig();
   const dynamicFieldsQuery = `
-    ${config.locales.map((locale) => 
-    `\n${locale} {
+    ${config.locales.map(
+      (locale) =>
+        `\n${locale} {
       nodeId
       locale
       url
       component
     }\n`
-  )}
-  `
+    )}
+  `;
   const result = await graphql(`
     query {
       allI18NRoute {
@@ -49,18 +50,18 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     // new node field for each locale on the I18nRoute node
     for (const locale in localesData) {
       const localeData = localesData[locale];
-        
+
       // a markdown page might not have its translated content hence we do not
       // create the page here, but later with the `untranslatedComponent` if set
       if (localeData) {
         availableLocalesData.push(localeData);
-  
+
         const { url, component, nodeId } = localeData;
-  
+
         if (options.debug) {
           logger("info", `(createPages) create page for url: ${url}`);
         }
-  
+
         // create page with right URLs
         // we use `url` instead of `id` in the page queries to render a single
         // localised page, as the below untranslated components do not have a known
@@ -85,12 +86,12 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     if (
       options.untranslatedComponent &&
       availableLocalesData.length < config.locales.length
-      ) {
-        const availableLocales = availableLocalesData.map(({ locale }) => locale);
-        const missingLocales = config.locales.filter(
-          (locale) => !availableLocales.includes(locale)
-        );
-          
+    ) {
+      const availableLocales = availableLocalesData.map(({ locale }) => locale);
+      const missingLocales = config.locales.filter(
+        (locale) => !availableLocales.includes(locale)
+      );
+
       if (missingLocales.length) {
         missingLocales.forEach((locale) => {
           // now we need to determine the url path of the untranslated route

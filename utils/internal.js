@@ -104,7 +104,7 @@ const cleanI18nRoutes = () => {
 // let cachedRoutesMap;
 /**
  * Read and returns the routes mapping cached to disk
- * 
+ *
  * FIXME: use gatsby cace mechanism
  */
 const getI18nRoutes = () => {
@@ -155,18 +155,18 @@ const registerI18nRoutes = (data) => {
 
 /**
  * Register i18n route url on cache routes map
- * 
- * @param {string} routeId 
- * @param {string} locale 
- * @param {string} url 
+ *
+ * @param {string} routeId
+ * @param {string} locale
+ * @param {string} url
  */
 const registerI18nRouteUrl = (routeId, locale, url) => {
   const existingRoutes = getI18nRoutes();
   existingRoutes[routeId] = existingRoutes[routeId] || {};
   existingRoutes[routeId][locale] = url;
-  
+
   writeI18nRoutesMap(existingRoutes);
-}
+};
 
 /**
  * Flatten nested messages object data
@@ -228,12 +228,11 @@ const ensureLocalisedMessagesFile = (messagesPath, locale) => {
 
 /**
  * Ensure that files with translated strings exist, if the don't they are created
- * 
+ *
  * @param {GatsbyI18n.Config} config
  * @param {GatsbyI18n.Options} options
  */
 const ensureLocalisedMessagesFiles = ({ locales }, { messagesPath }) => {
-
   locales.forEach((locale) => {
     ensureLocalisedMessagesFile(messagesPath, locale);
   });
@@ -343,7 +342,6 @@ const extractPathParts = (relativePath) => {
   return { routeId, slug, locale };
 };
 
-
 /**
  * Get template basename stripping out allowed extensions
  *
@@ -415,7 +413,7 @@ const reorderLocales = (config) => {
  * @param {string} locale
  * @param {string} slug
  */
- const localiseUrl = (config, locale, slug) => {
+const localiseUrl = (config, locale, slug) => {
   const urlWithLocale = normaliseUrlPath(`/${locale}/${slug}`);
   const urlWithoutLocale = normaliseUrlPath(`/${slug}`);
   const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
@@ -431,9 +429,9 @@ const reorderLocales = (config) => {
  * @param {string} locale
  * @param {string} url
  */
- const relocaliseUrl = (config, locale, url) => {
-   const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
-   let foundLocaleInUrl;
+const relocaliseUrl = (config, locale, url) => {
+  const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
+  let foundLocaleInUrl;
 
   for (let i = 0; i < config.locales.length; i++) {
     const configLocale = config.locales[i];
@@ -452,7 +450,7 @@ const reorderLocales = (config) => {
   if (foundLocaleInUrl) {
     return url.replace(foundLocaleInUrl, "");
   }
-  
+
   throw new Error("[gatsby-i18n]: Tried to relocalise a url without success");
 };
 
@@ -474,5 +472,5 @@ module.exports = {
   getPage,
   reorderLocales,
   localiseUrl,
-  relocaliseUrl
+  relocaliseUrl,
 };

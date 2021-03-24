@@ -16,12 +16,11 @@
 //   module.exports = graphql\`
 //     fragment I18nRouteUrls on I18nRoute {
 //       fields {
-        
+
 //       }
 //     }
 //   \`
 // `
-
 
 // FIXME: TODO: dynamically create a graphql fragment with babel-plugin-preval
 // that would get all defined locales on the fields object of this query,
