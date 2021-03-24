@@ -1,16 +1,15 @@
 // @ts-check
 
-const { getI18nOptions, getI18nConfig } = require("../utils/internal");
-// const { getOptions } = require("../utils/options");
+const { getOptions } = require("../utils/options");
+const { getI18nConfig } = require("../utils/internal");
 
 const sourceNodes = (
   { actions, createContentDigest, createNodeId },
-  customOptions
+  pluginOptions
 ) => {
   const { createNode } = actions;
 
-  // const options = getOptions(customOptions);
-  const options = getI18nOptions();
+  const options = getOptions(pluginOptions);
   // const config = require(options.configPath);
   const config = getI18nConfig();
 

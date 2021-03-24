@@ -1,7 +1,31 @@
-import React, { FC } from "react";
-import { Link as GatsbyLink } from "gatsby";
+import React from "react";
+import { Link as GatsbyLink, GatsbyLinkProps } from "gatsby";
 import { useI18n } from "./I18nContext";
 import { getDestination } from "../helpers";
+
+/**
+ * `to` becomes optional here, as this component will usually be used with
+ *`route` prop instead, we might even override `to` but it's more clear and
+ * transparent to use a different prop as the value passed to it is not the
+ * same as the one you would pass to `to`.
+ */
+export type GatsbyI18nLinkProps<TState> = _withTo<TState> | _withRoute<TState>;
+
+type _baseProps<TState> = Omit<GatsbyLinkProps<TState>, "ref" | "to">;
+
+type _withTo<TState> = _baseProps<TState> & {
+  route?: undefined;
+  locale?: undefined;
+  params?: undefined;
+  to: string;
+};
+
+type _withRoute<TState> = _baseProps<TState> & {
+  route: string;
+  locale?: string;
+  params?: { [key: string]: string };
+  to?: undefined;
+};
 
 /**
  * Localised version fo native Gatsby's `<Link>` component
@@ -10,18 +34,21 @@ import { getDestination } from "../helpers";
  *
  * TODO: check if we need to use `React.forwardRef`
  */
-export const Link: FC<{
-  route: string;
-  locale?: string;
-  params?: { [key: string]: string };
-  onClick?: Function;
-}> = ({ route, locale, params, onClick, ...props }) => {
+export const Link = <TState extends {}>({
+  route,
+  locale,
+  params,
+  onClick,
+  ...props
+}: GatsbyI18nLinkProps<TState>) => {
   if (route) {
     const i18n = useI18n();
     let to = getDestination(i18n, route, locale);
 
     if (to) {
-      const handleClick = (e) => {
+      const handleClick = (
+        e: React.MouseEvent<HTMLAnchorElement, MouseEvent>
+      ) => {
         if (locale) {
           localStorage.setItem("gatsby-i18n-locale", locale);
         }
@@ -48,5 +75,10 @@ export const Link: FC<{
     }
   }
 
-  return <GatsbyLink onClick={onClick} {...props} />;
+  // this is just for typescript...
+  if (props.to) {
+    return <GatsbyLink onClick={onClick} {...props} />;
+  }
+
+  throw new Error("GatsbyI8nLink called without neither `to` nor `route`");
 };

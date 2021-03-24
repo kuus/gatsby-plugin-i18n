@@ -1,14 +1,15 @@
 // @ts-check
 
+const { getOptions } = require("../utils/options");
 const {
   getI18nConfig,
   shouldCreateLocalisedPage,
-  getI18nOptions,
+  reorderLocales,
 } = require("../utils/internal");
 
-const onPostBootstrap = ({ actions }) => {
+const onPostBootstrap = ({ actions }, pluginOptions) => {
   const { createRedirect } = actions;
-  const options = getI18nOptions();
+  const options = getOptions(pluginOptions);
   const config = getI18nConfig();
 
   // create these redirects for netlify:
@@ -33,6 +34,26 @@ const onPostBootstrap = ({ actions }) => {
       createRedirect(redirect);
     });
   }
+
+  // with netlify redirects we can localise 404 pages, @see
+  // https://docs.netlify.com/routing/redirects/redirect-options/#custom-404-page-handling
+  // this could be done automatically by using the `matchPath` 4th
+  // argument to the function `getPage`, we don't do it though, as the
+  // redirect automatically created has a 200 instead of a 404
+  // statusCode, hence we "manually" create the right redirect here.
+  // we sort the locales here in order to get the right priorities in
+  // the netlify `_redirects` file
+  const sortedLocales = reorderLocales(config);
+
+  sortedLocales.forEach((locale) => {
+    const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
+
+    createRedirect({
+      fromPath: isLocaleVisible ? `/${locale}/*` : "/*",
+      toPath: isLocaleVisible ? `/${locale}/404/index.html` : "/404/index.html",
+      statusCode: 404,
+    });
+  });
 };
 
 module.exports = onPostBootstrap;

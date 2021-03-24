@@ -1,5 +1,6 @@
 import React, { FC } from "react";
-import { useI18n, changeLocale, t } from "../../index";
+import { useI18n } from "./I18nContext";
+import { changeLocale, t } from "../helpers";
 
 export const I18nSwitchSelect: FC<{}> = () => {
   const i18n = useI18n();

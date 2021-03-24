@@ -26,7 +26,6 @@ const defaultConfig = {
   baseUrl: "",
   locales: ["en"],
   defaultLocale: "en",
-  // enforceLocalisedUrls: false,
   hideDefaultLocaleInUrl: true,
 };
 

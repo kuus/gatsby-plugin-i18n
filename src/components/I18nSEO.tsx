@@ -1,8 +1,8 @@
 import React from "react";
 import { useStaticQuery, graphql } from "gatsby";
 import Helmet from "react-helmet";
-import { getCurrentRoute } from "../helpers";
 import { useI18n } from "./I18nContext";
+import { getCurrentRoute } from "../helpers";
 
 /**
  * Automatically manage i18n related SEO HTML tags.

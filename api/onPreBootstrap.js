@@ -6,20 +6,24 @@ const {
   ensureI18nConfig,
   ensureLocalisedMessagesFiles,
   getI18nConfig,
-  cleanI18nRoutesMap,
+  cleanI18nRoutes,
   shouldCreateLocalisedPage,
 } = require("../utils/internal");
+const { getOptions } = require("../utils/options");
 
 const onPreBootstrap = ({ store, actions }, customOptions) => {
   const { program } = store.getState();
+  const options = getOptions(customOptions);
 
-  writeI18nOptions(customOptions);
+  writeI18nOptions(options);
   ensureI18nConfig(program.directory);
-  ensureLocalisedMessagesFiles();
-  cleanI18nRoutesMap();
+
+  const config = getI18nConfig();
+
+  ensureLocalisedMessagesFiles(config, options);
+  cleanI18nRoutes();
 
   const { createRedirect } = actions;
-  const config = getI18nConfig();
 
   config.locales.forEach((locale) => {
     const visibleLocale = shouldCreateLocalisedPage(config, locale);

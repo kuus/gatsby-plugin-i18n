@@ -32,8 +32,6 @@ export namespace GatsbyI18n {
     locales: string[];
     /** @default  "en" */
     defaultLocale: string;
-    /** @default  false */
-    // enforceLocalisedUrls: false;
     /** @default  true */
     hideDefaultLocaleInUrl: boolean;
   };

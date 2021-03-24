@@ -1,20 +1,8 @@
 import React from "react";
-import { Link as GatsbyLink, GatsbyLinkProps } from "gatsby";
+import { Link as GatsbyLink } from "gatsby";
 import { useI18n } from "./I18nContext";
 import { getDestinationSQ } from "../helpers";
-
-type GatsbyI18nLinkProps<TState> = Omit<GatsbyLinkProps<TState>, "to"> & {
-  route?: string;
-  locale?: string;
-  /**
-   * to becomes optional here, as this component will usually be used with
-   *`route` prop instead, we might even override `to` but it's more clear and
-   * transparent to use a different prop as the value passed to it is not the
-   * same as the one you would pass to `to`.
-   */
-  to?: string;
-  // children?: ReactNode;
-};
+import { GatsbyI18nLinkProps } from "./Link";
 
 export const Link = <TState extends {}>({
   route,
@@ -30,5 +18,10 @@ export const Link = <TState extends {}>({
     }
   }
 
-  return <GatsbyLink {...props} />;
+  // this is just for typescript...
+  if (props.to) {
+    return <GatsbyLink {...props} />;
+  }
+
+  throw new Error("GatsbyI8nLink called without neither `to` nor `route`");
 };

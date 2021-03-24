@@ -1,5 +1,8 @@
 import React, { FC } from "react";
-import { useI18n, Link, getCurrentRoute, t } from "../../index";
+import { getCurrentRoute } from "../helpers";
+import { useI18n } from "./I18nContext";
+import { Link } from "./Link";
+import { t } from "../helpers";
 
 export const I18nSwitchLinks: FC<{}> = () => {
   const { locales, currentLocale } = useI18n();

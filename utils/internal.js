@@ -97,18 +97,25 @@ const writeI18nOptions = (custom) => {
 /**
  * Clean/resets the routes mapping cached to disk
  */
-const cleanI18nRoutesMap = () => {
+const cleanI18nRoutes = () => {
   writeI18nRoutesMap({});
 };
 
+// let cachedRoutesMap;
 /**
  * Read and returns the routes mapping cached to disk
+ * 
+ * FIXME: use gatsby cace mechanism
  */
-const getI18nRoutesMap = () => {
+const getI18nRoutes = () => {
+  // if (cachedRoutesMap) {
+  //   return cachedRoutesMap;
+  // }
   let routesMap = {};
 
   try {
     routesMap = JSON.parse(fs.readFileSync(routesPath, "utf-8"));
+    // cachedRoutesMap = routesMap;
   } catch (e) {
     logger("warn", `Failed to read file ${routesPath}`);
   }
@@ -124,7 +131,11 @@ const getI18nRoutesMap = () => {
  */
 const writeI18nRoutesMap = (data) => {
   try {
-    fs.writeFileSync(routesPath, JSON.stringify(data), "utf-8");
+    const { debug } = getI18nOptions();
+    const parser = debug
+      ? (data) => JSON.stringify(data, null, 2)
+      : (data) => JSON.stringify(data);
+    fs.writeFileSync(routesPath, parser(data), "utf-8");
   } catch (e) {
     logger("error", `Failed to write file ${routesPath}`);
   }
@@ -137,10 +148,25 @@ const writeI18nRoutesMap = (data) => {
  *
  * @param {GatsbyI18n.RoutesMap} data
  */
-const addI18nRoutesMappings = (data) => {
-  const existingRoutes = getI18nRoutesMap();
+const registerI18nRoutes = (data) => {
+  const existingRoutes = getI18nRoutes();
   writeI18nRoutesMap({ ...existingRoutes, ...data });
 };
+
+/**
+ * Register i18n route url on cache routes map
+ * 
+ * @param {string} routeId 
+ * @param {string} locale 
+ * @param {string} url 
+ */
+const registerI18nRouteUrl = (routeId, locale, url) => {
+  const existingRoutes = getI18nRoutes();
+  existingRoutes[routeId] = existingRoutes[routeId] || {};
+  existingRoutes[routeId][locale] = url;
+  
+  writeI18nRoutesMap(existingRoutes);
+}
 
 /**
  * Flatten nested messages object data
@@ -202,10 +228,11 @@ const ensureLocalisedMessagesFile = (messagesPath, locale) => {
 
 /**
  * Ensure that files with translated strings exist, if the don't they are created
+ * 
+ * @param {GatsbyI18n.Config} config
+ * @param {GatsbyI18n.Options} options
  */
-const ensureLocalisedMessagesFiles = () => {
-  const { locales } = getI18nConfig();
-  const { messagesPath } = getI18nOptions();
+const ensureLocalisedMessagesFiles = ({ locales }, { messagesPath }) => {
 
   locales.forEach((locale) => {
     ensureLocalisedMessagesFile(messagesPath, locale);
@@ -241,33 +268,18 @@ const getPageContextData = (locale, additional = {}) => {
 /**
  * Extract from path
  *
- * Given the file "src/content/my/page/index.en.md":
- * - `routeId` will be e.g. "/my/page"
- * - `slug` will be e.g. "/my/page"
- * - `locale` will be e.g. "en"
- *
- * @param {string} fileAbsolutePath
+ * @param {string} relativePath
  */
-const extractFromPath = (fileAbsolutePath) => {
-  const file = extractFileParts(fileAbsolutePath);
-  const routeId = getFileRouteId(file);
-  const slug = getFileSlug(file);
-  const locale = getFileLocale(file);
-
-  return { routeId, slug, locale };
+const extractFromPath = (relativePath) => {
+  return extractPathParts(relativePath);
 };
 
 /**
- * Extract file parts
- *
- * Given the file "src/content/my/page/index.en.md" `file`'s properties will be:
- * - `dir` e.g. "/my/page"
- * - `name` e.g. "page"
- * - `locale` e.g. "en"
+ * Extract from file path
  *
  * @param {string} fileAbsolutePath
  */
-const extractFileParts = (fileAbsolutePath) => {
+const extractFromFilePath = (fileAbsolutePath) => {
   const { contentPaths } = getI18nOptions();
   let foundContentPath = "";
   if (Array.isArray(contentPaths)) {
@@ -279,105 +291,58 @@ const extractFileParts = (fileAbsolutePath) => {
     }
   }
   const fileRelativePath = fileAbsolutePath.split(foundContentPath)[1];
-  const dir = path.dirname(fileRelativePath);
-  let name = path.basename(fileAbsolutePath, ".md");
-  name = getTemplateBasename(name);
-  const nameChunks = name.split(".");
-  // remove optional locale info from filename, e.g. "index.en.md"
-  name = nameChunks[0];
-  // grab last name part after dot or return `null` if locale is not specified
-  const locale =
-    nameChunks.length > 1 ? nameChunks[nameChunks.length - 1] : null;
 
-  return { dir, name, locale };
+  return extractPathParts(fileRelativePath);
 };
 
 /**
- * Get file's routeId from the information extracted by its path
+ * Extract path parts
  *
- * The routeId matches the src/pages directory structure, which represents the
+ * The `routeId` matches the src/pages directory structure, which represents the
  * default locale slugs usually
  *
- * @param {ReturnType<typeof extractFileParts>} file
+ * Given the file "src/content/my/page/index.en.md" `file`'s properties will be:
+ * - `dir` e.g. "/my/page"
+ * - `name` e.g. "page"
+ * - `locale` e.g. "en"
+ *
+ * The `locale` can be null here, the default will be assigned later in the
+ * `getFileLocale` function, here we don't assume anything, we just parse the
+ * file path and extract its parts.
+ *
+ * @param {string} relativePath
  */
-const getFileRouteId = ({ dir, name }) => {
+const extractPathParts = (relativePath) => {
+  const { locales, defaultLocale } = getI18nConfig();
+  let { dir, name } = path.parse(relativePath);
+  const nameParts = name.split(".");
+  // remove optional locale info from filename, e.g. "index.en.md"
+  name = nameParts[0];
+
   let routeId = name === "index" ? dir : `${dir}/${name}`;
   routeId = normaliseRouteId(routeId);
-  return routeId;
-};
 
-/**
- * Get file's slug from the information extracted by its path
- *
- * @param {ReturnType<typeof extractFileParts>} file
- */
-const getFileSlug = ({ dir, name }) => {
   let slug = name === "index" ? dir : `${dir}/${name}`;
   slug = normaliseUrlPath(slug);
-  return slug;
+
+  // try to grab last name part after dot
+  let locale = nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
+
+  // if not specified just assume is the default
+  if (!locale) {
+    locale = defaultLocale;
+  }
+  // if specified but not in configured list log an error
+  else if (!locales.includes(locale)) {
+    logger(
+      "error",
+      `You need to add the locale ${locale} to the plugin options to render the file ${dir}/${name}`
+    );
+  }
+
+  return { routeId, slug, locale };
 };
 
-/**
- *
- * @param {ReturnType<typeof extractFileParts>} file
- */
-const getFileLocale = (file) => {
-  const { locales, defaultLocale } = getI18nConfig();
-  let locale = defaultLocale;
-
-  if (file.locale) {
-    if (locales.includes(file.locale)) {
-      locale = file.locale;
-    } else {
-      logger(
-        "error",
-        `You need to add the locale ${file.locale} to the plugin options`
-      );
-    }
-  }
-
-  return locale;
-};
-
-/**
- * Is file to localise?
- *
- * It checks that the given file path is within the `contentPaths` defined in the
- * plugin options and that it is not a template
- *
- * @param {string} filePath
- * @returns {boolean}
- */
-const isFileToLocalise = (filePath) => {
-  if (!filePath) {
-    return false;
-  }
-  const { contentPaths, templateName } = getI18nOptions();
-  let isInContentPath = false;
-  const extName = path.extname(filePath);
-  // logger("info", `isFileToLocalise? ${filePath}, with extName: ${extName}`);
-
-  // disregard file types other than markdown and templates
-  if ([".md", ".mdx", ".js", ".jsx", ".ts", ".tsx"].indexOf(extName) === -1) {
-    return false;
-  }
-  if (typeof contentPaths === "string") {
-    if (filePath.includes(contentPaths)) {
-      isInContentPath = true;
-    }
-  } else if (Array.isArray(contentPaths)) {
-    for (let i = 0; i < contentPaths.length; i++) {
-      if (filePath.includes(contentPaths[i])) {
-        isInContentPath = true;
-        break;
-      }
-    }
-  }
-
-  const fileBasename = path.basename(filePath);
-
-  return isInContentPath && fileBasename !== templateName;
-};
 
 /**
  * Get template basename stripping out allowed extensions
@@ -443,24 +408,52 @@ const reorderLocales = (config) => {
 };
 
 /**
- * Gives the URL variants and information for the given locale and slug
- * according to the current configuration
+ * Gives the URL variant for the given locale and slug according to the current
+ * configuration
  *
  * @param {GatsbyI18n.Config} config
  * @param {string} locale
  * @param {string} slug
  */
-const getUrlData = (config, locale, slug) => {
+ const localiseUrl = (config, locale, slug) => {
   const urlWithLocale = normaliseUrlPath(`/${locale}/${slug}`);
   const urlWithoutLocale = normaliseUrlPath(`/${slug}`);
   const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
 
-  return {
-    isLocaleVisible,
-    urlWithLocale,
-    urlWithoutLocale,
-    url: isLocaleVisible ? urlWithLocale : urlWithoutLocale,
-  };
+  return isLocaleVisible ? urlWithLocale : urlWithoutLocale;
+};
+
+/**
+ * Gives the URL for the given locale based on another already localised URL
+ * and according to the current configuration
+ *
+ * @param {GatsbyI18n.Config} config
+ * @param {string} locale
+ * @param {string} url
+ */
+ const relocaliseUrl = (config, locale, url) => {
+   const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
+   let foundLocaleInUrl;
+
+  for (let i = 0; i < config.locales.length; i++) {
+    const configLocale = config.locales[i];
+    if (url.startsWith(`/${configLocale}/`)) {
+      foundLocaleInUrl = configLocale;
+      break;
+    }
+  }
+
+  if (isLocaleVisible) {
+    if (foundLocaleInUrl) {
+      return url.replace(foundLocaleInUrl, locale);
+    }
+    return normaliseUrlPath(`/${locale}/${url}`);
+  }
+  if (foundLocaleInUrl) {
+    return url.replace(foundLocaleInUrl, "");
+  }
+  
+  throw new Error("[gatsby-i18n]: Tried to relocalise a url without success");
 };
 
 module.exports = {
@@ -468,16 +461,18 @@ module.exports = {
   getI18nConfig,
   getI18nOptions,
   writeI18nOptions,
-  getI18nRoutesMap,
-  cleanI18nRoutesMap,
-  addI18nRoutesMappings,
+  getI18nRoutes,
+  cleanI18nRoutes,
+  registerI18nRoutes,
+  registerI18nRouteUrl,
   ensureLocalisedMessagesFiles,
   getPageContextData,
   extractFromPath,
-  isFileToLocalise,
+  extractFromFilePath,
   getTemplateBasename,
   shouldCreateLocalisedPage,
   getPage,
   reorderLocales,
-  getUrlData,
+  localiseUrl,
+  relocaliseUrl
 };

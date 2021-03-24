@@ -13,7 +13,7 @@ export const useIntl = reactUseIntl;
 /**
  * Output a translated string by id, a shortcut to `useIntl().formatMessage`
  */
-export const t = (id: string, data: { [key: string]: string }): string => reactUseIntl().formatMessage({ id }, data);
+export const t = (id: string, data?: { [key: string]: string }): string => reactUseIntl().formatMessage({ id }, data);
 
 /**
  * Find route object that matches the given URL path
@@ -72,6 +72,9 @@ export const getDestination = (i18n: GatsbyI18n.I18n, routeId: string, locale?: 
 };
 
 /**
+ * FIXME: Without the ability to pass variables to static queries this is pretty
+ * useless...
+ * 
  * @inheritdoc(getDestination)
  */
 export const getDestinationSQ = (i18n: GatsbyI18n.I18n, routeId: string, locale?: string): string => {
@@ -82,10 +85,10 @@ export const getDestinationSQ = (i18n: GatsbyI18n.I18n, routeId: string, locale?
       allI18NRoute {
         nodes {
           routeId
-          fields {
-            it
-            en
-          }
+          # fields {
+          #   it
+          #   en
+          # }
         }
       }
     }
@@ -97,7 +100,7 @@ export const getDestinationSQ = (i18n: GatsbyI18n.I18n, routeId: string, locale?
   let localisedTo = "";
 
   if (nodes[0] && nodes[0].fields[locale]) {
-    localisedTo = nodes[0].fields[locale];
+    localisedTo = nodes[0].fields[locale].url;
   }
 
   if (typeof window === "undefined") {
