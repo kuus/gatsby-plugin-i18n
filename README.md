@@ -2,6 +2,12 @@
 
 This plugin is meant to be used with netlify and its [gatsby-plugin-netlify](https://github.com/gatsbyjs/gatsby/tree/master/packages/gatsby-plugin-netlify) to correctly handle redirects server side. A less SEO friendly alternative would be to use this plugin alongside [gatsby-plugin-meta-redirect](https://github.com/nsresulta/gatsby-plugin-meta-redirect) or [gatsby-plugin-client-side-redirect](https://github.com/dhakerShiv/gatsby-plugin-client-side-redirect), they all exploit the gatsby's [`createRedirect` action](https://www.gatsbyjs.com/docs/reference/config-files/actions/#createRedirect).
 
+## Localised messages
+
+- **Components** specific string are prefixed by the component name in PascalCase, e.g. for component `Header` the string prefix is `Header.`
+- **Pages** and **templates** specific strings are prefixed by the page component name all lowercase minus the prefix `Pages` or `Template`, e.g. for page *about* the component would be `PagesAbout` and the string prefix is `about.`, for the template *blog-single* the component would be `TemplateBlogSingle` and the string prefix is `blogsingle`
+- **Generic** strings not tight to any component or page in particular are prefxed with a `.` dot and begin lowercase, e.g. `.globalMessage`
+
 ## Resources
 
 - [Netlify redirects adn localization](https://docs.netlify.com/routing/redirects/redirect-options/#redirect-by-country-or-language)

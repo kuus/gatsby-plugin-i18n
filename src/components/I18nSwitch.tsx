@@ -15,7 +15,7 @@ export const I18nSwitch: FC<{}> = () => {
             fontWeight: i18n.currentLocale === locale ? 600 : 300,
           }}
         >
-          {t(`I18nSwitch_${locale}`)}
+          {t(`I18nSwitch.${locale}`)}
           {" • "}
         </span>
       ))}

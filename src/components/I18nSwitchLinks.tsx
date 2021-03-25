@@ -22,7 +22,7 @@ export const I18nSwitchLinks: FC<{}> = () => {
             fontWeight: currentLocale === locale ? 600 : 300,
           }}
         >
-          {t(`I18nSwitch_${locale}`)}
+          {t(`I18nSwitch.${locale}`)}
           {" • "}
         </Link>
       ))}

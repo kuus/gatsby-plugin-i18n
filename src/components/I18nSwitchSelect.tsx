@@ -12,7 +12,7 @@ export const I18nSwitchSelect: FC<{}> = () => {
     >
       {i18n.locales.map((locale) => (
         <option key={locale} value={locale}>
-          {t(`I18nSwitch_${locale}`)}
+          {t(`I18nSwitch.${locale}`)}
         </option>
       ))}
     </select>
