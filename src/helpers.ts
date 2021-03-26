@@ -37,47 +37,6 @@ export const getRouteUrl = (i18n: GatsbyI18n.I18n, routeId: string, locale?: str
 };
 
 /**
- * FIXME: Without the ability to pass variables to static queries this is pretty
- * useless...
- * 
- * @inheritdoc(getRouteUrl)
- */
-export const getRouteUrlSQ = (i18n: GatsbyI18n.I18n, routeId: string, locale?: string): string => {
-  locale = locale || i18n.currentLocale;
-  routeId = normaliseRouteId(routeId);
-  const data = useStaticQuery(graphql`
-    {
-      allI18NRoute {
-        nodes {
-          routeId
-          # fields {
-          #   it
-          #   en
-          # }
-        }
-      }
-      # i18NLinks {
-      # }
-    }
-  `);
-
-  const nodes = data.allI18NRoute.nodes.filter(
-    (node) => node.routeId === routeId
-  );
-  let localisedTo = "";
-
-  if (nodes[0] && nodes[0].fields[locale]) {
-    localisedTo = nodes[0].fields[locale].url;
-  }
-
-  if (typeof window === "undefined") {
-    return localisedTo;
-  }
-
-  return `${localisedTo}${window.location.search}`;
-};
-
-/**
  * Localised version of native Gatsby's `navigate`
  *
  * @see https://www.gatsbyjs.com/docs/reference/built-in-components/gatsby-link/#how-to-use-the-navigate-helper-function
