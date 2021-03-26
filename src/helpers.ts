@@ -1,5 +1,5 @@
 import { useIntl as reactUseIntl } from "react-intl";
-import { graphql, useStaticQuery, navigate as gatsbyNavigate } from "gatsby";
+import { navigate as gatsbyNavigate } from "gatsby";
 import { NavigateOptions } from "@reach/router";
 import { GatsbyI18n } from "./types";
 import { normaliseRouteId } from "../utils";
@@ -28,47 +28,6 @@ export const getRouteUrl = (i18n: GatsbyI18n.I18n, routeId: string, locale?: str
   locale = locale || i18n.currentLocale;
   routeId = normaliseRouteId(routeId);
   const localisedTo = require(`../.routes/${routeId.replace(/\//g, "_")}--${locale}.json`).url;
-
-  if (typeof window === "undefined") {
-    return localisedTo;
-  }
-
-  return `${localisedTo}${window.location.search}`;
-};
-
-/**
- * FIXME: Without the ability to pass variables to static queries this is pretty
- * useless...
- * 
- * @inheritdoc(getRouteUrl)
- */
-export const getRouteUrlSQ = (i18n: GatsbyI18n.I18n, routeId: string, locale?: string): string => {
-  locale = locale || i18n.currentLocale;
-  routeId = normaliseRouteId(routeId);
-  const data = useStaticQuery(graphql`
-    {
-      allI18NRoute {
-        nodes {
-          routeId
-          # fields {
-          #   it
-          #   en
-          # }
-        }
-      }
-      # i18NLinks {
-      # }
-    }
-  `);
-
-  const nodes = data.allI18NRoute.nodes.filter(
-    (node) => node.routeId === routeId
-  );
-  let localisedTo = "";
-
-  if (nodes[0] && nodes[0].fields[locale]) {
-    localisedTo = nodes[0].fields[locale].url;
-  }
 
   if (typeof window === "undefined") {
     return localisedTo;
