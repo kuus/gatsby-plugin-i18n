@@ -7,6 +7,6 @@ exports.sourceNodes = require("./api/sourceNodes");
 exports.unstable_shouldOnCreateNode = require("./api/shouldOnCreateNode");
 exports.onCreateNode = require("./api/onCreateNode");
 exports.createPages = require("./api/createPages");
-// exports.onCreatePages = require("./api/onCreatePages");
+exports.onCreatePage = require("./api/onCreatePage");
 exports.createResolvers = require("./api/createResolvers");
 exports.onPostBootstrap = require("./api/onPostBootstrap");
