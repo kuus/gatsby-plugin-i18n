@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { useI18n } from "./I18nContext";
-import { changeLocale, t } from "../helpers";
+import { navigate, t } from "../helpers";
 
 export const I18nSwitchSelect: FC<{}> = () => {
   const i18n = useI18n();
@@ -8,7 +8,7 @@ export const I18nSwitchSelect: FC<{}> = () => {
   return (
     <select
       value={i18n.currentLocale}
-      onChange={(e) => changeLocale(i18n, e.target.value)}
+      onChange={(e) => navigate(i18n, e.target.value)}
     >
       {i18n.locales.map((locale) => (
         <option key={locale} value={locale}>

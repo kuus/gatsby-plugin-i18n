@@ -5,7 +5,7 @@ const {
   getI18nOptions,
   getI18nConfig,
   getTemplateBasename,
-  getPage,
+  getI18nContext,
 } = require("../utils/internal");
 
 /**
@@ -36,7 +36,6 @@ const onCreatePage = ({ page, actions }) => {
   const options = getI18nOptions();
   const config = getI18nConfig();
   const { templateName } = options;
-  const oldPage = { ...page };
   const templateBasename = getTemplateBasename(templateName);
 
   if (page.path.endsWith(`/${templateBasename}/`)) {
@@ -49,9 +48,17 @@ const onCreatePage = ({ page, actions }) => {
   } else if (page.path.endsWith("404.html")) {
     // create a 404.html fallback page with default language, anyway with netlify
     // redirects the localised version of the 404 page with a pretty URL should
-    // be used by the condition here below
+    // be used by the redirects set `onPostBootstrap`
     deletePage(page);
-    createPage(getPage(oldPage, config.defaultLocale, "/404.html"));
+    createPage({
+      ...page,
+      path: "/404.html",
+      matchPath: "/404.html",
+      context: {
+        ...page.context,
+        ...getI18nContext(config.defaultLocale, { alternates: [] }),
+      },
+    });
   } else {
     // always delete pages that are loosely placed as `.js/.tsx` files in
     // `src/pages`. Those recreated and localised in the `createPages` api

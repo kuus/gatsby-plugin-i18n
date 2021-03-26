@@ -20,12 +20,12 @@ const createSchemaCustomization = ({ actions }) => {
     }
   `);
 
-  createTypes(`
-    type I18nRouteUrl {
-      locale: String
-      url: String
-    }
-  `);
+  // createTypes(`
+  //   type I18nRouteUrl {
+  //     locale: String
+  //     url: String
+  //   }
+  // `);
 
   // add `url` on Mdx and File nodes to ease the "link->to" data retrieval
   createFieldExtension({

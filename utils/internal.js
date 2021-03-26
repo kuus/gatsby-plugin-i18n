@@ -22,6 +22,15 @@ let optionsPath = path.resolve(__dirname, "../", ".options.json");
 let routesPath = path.resolve(__dirname, "../", ".routes.json");
 
 /**
+ * 
+ * @param {{GatsbyI18n.Options}} options
+ * @param {string} locale 
+ */
+const getMessagesPath = ({ messagesPath }, locale) => {
+  return path.join(messagesPath, `${locale}.yml`)
+}
+
+/**
  * We write config to a file so that we can use it from the project implementing
  * this plugin in its own `onCreatePage` gatsby-node hook, the reason for this
  * is that we cannot get the pages created from this plugin's `onCreatePage`
@@ -165,6 +174,12 @@ const registerI18nRouteUrl = (routeId, locale, url) => {
   existingRoutes[routeId] = existingRoutes[routeId] || {};
   existingRoutes[routeId][locale] = url;
 
+  // FIXME: wip dynamic require in Link
+  const baseFolder = path.resolve(__dirname, "../.routes/");
+  if (!fs.existsSync(baseFolder)) {
+    fs.mkdirSync(baseFolder);
+  }
+  fs.writeFileSync(path.join(baseFolder, `${routeId.replace(/\//g, "_")}--${locale}.json`), JSON.stringify({ url }));
   writeI18nRoutesMap(existingRoutes);
 };
 
@@ -191,9 +206,12 @@ const flattenMessages = (nestedMessages, prefix = "") => {
 };
 
 /**
- * @param {string} fullPath
+ * @param {GatsbyI18n.Options} options
+ * @param {string} locale
  */
-const getMessages = (fullPath) => {
+const getMessages = (options, locale) => {
+  const fullPath = getMessagesPath(options, locale);
+
   try {
     const messages = /** @type {object} */ (yaml.load(
       fs.readFileSync(fullPath, "utf8")
@@ -211,30 +229,18 @@ const getMessages = (fullPath) => {
 };
 
 /**
- * If a localised messages file (e.g. `en.yml`) does not exist it creates it
- *
- * @param {string} messagesPath
- * @param {string} locale
- * @returns {string} The path of the localised messages file
- */
-const ensureLocalisedMessagesFile = (messagesPath, locale) => {
-  const fullPath = path.join(messagesPath, `${locale}.yml`);
-  if (!fs.existsSync(fullPath)) {
-    fs.writeFileSync(fullPath, "", "utf-8");
-  }
-
-  return fullPath;
-};
-
-/**
  * Ensure that files with translated strings exist, if the don't they are created
+ * If a localised messages file (e.g. `en.yml`) does not exist it creates it
  *
  * @param {GatsbyI18n.Config} config
  * @param {GatsbyI18n.Options} options
  */
-const ensureLocalisedMessagesFiles = ({ locales }, { messagesPath }) => {
+const ensureLocalisedMessagesFiles = ({ locales }, options) => {
   locales.forEach((locale) => {
-    ensureLocalisedMessagesFile(messagesPath, locale);
+    const fullPath = getMessagesPath(options, locale);
+    if (!fs.existsSync(fullPath)) {
+      fs.writeFileSync(fullPath, "", "utf-8");
+    }
   });
 };
 
@@ -245,13 +251,12 @@ const ensureLocalisedMessagesFiles = ({ locales }, { messagesPath }) => {
  * @param {object} [additional]
  * @returns {GatsbyI18n.PageContext}
  */
-const getPageContextData = (locale, additional = {}) => {
+const getI18nContext = (locale, additional = {}) => {
   const { locales, defaultLocale } = getI18nConfig();
-  let { messagesPath } = getI18nOptions();
+  let options = getI18nOptions();
 
   locale = locale || defaultLocale;
-  messagesPath = ensureLocalisedMessagesFile(messagesPath, locale);
-  const messages = getMessages(messagesPath);
+  const messages = getMessages(options, locale);
 
   return {
     i18n: {
@@ -262,15 +267,6 @@ const getPageContextData = (locale, additional = {}) => {
       ...additional,
     },
   };
-};
-
-/**
- * Extract from path
- *
- * @param {string} relativePath
- */
-const extractFromPath = (relativePath) => {
-  return extractPathParts(relativePath);
 };
 
 /**
@@ -368,28 +364,6 @@ const shouldCreateLocalisedPage = (config, locale) => {
 };
 
 /**
- * @param {import("gatsby").Page<{}>} page
- * @param {string} [locale]
- * @param {string} [path]
- * @param {string} [matchPath]
- */
-const getPage = (page, locale, path, matchPath) => {
-  const data = {
-    ...page,
-    path,
-    matchPath: matchPath || path,
-    // FIXME: check what we actually need to pass to context
-    context: {
-      ...page.context,
-      locale,
-      ...getPageContextData(locale),
-    },
-  };
-
-  return data;
-};
-
-/**
  * Put defaultLocale as last in the array, this is useful to create netlify
  * redirects in the right order
  *
@@ -464,12 +438,10 @@ module.exports = {
   registerI18nRoutes,
   registerI18nRouteUrl,
   ensureLocalisedMessagesFiles,
-  getPageContextData,
-  extractFromPath,
+  getI18nContext,
   extractFromFilePath,
   getTemplateBasename,
   shouldCreateLocalisedPage,
-  getPage,
   reorderLocales,
   localiseUrl,
   relocaliseUrl,

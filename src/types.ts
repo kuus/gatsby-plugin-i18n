@@ -50,9 +50,14 @@ export namespace GatsbyI18n {
     defaultLocale: string;
     currentLocale: string;
     messages: { [key: string]: string };
-    availableIn?: {
-      to: string;
+    alternates: {
       locale: string;
+      url: string;
+      fullUrl: string;
+    }[];
+    translatedIn?: {
+      locale: string;
+      url: string;
     }[];
   }; 
   

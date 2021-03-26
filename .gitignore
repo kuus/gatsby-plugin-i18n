@@ -1,5 +1,6 @@
 dist
 /.*.json
+/.routes/
 node_modules/
 typings/
 logs

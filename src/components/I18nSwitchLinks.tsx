@@ -1,23 +1,17 @@
 import React, { FC } from "react";
-import { getCurrentRoute } from "../helpers";
 import { useI18n } from "./I18nContext";
 import { Link } from "./Link";
 import { t } from "../helpers";
 
 export const I18nSwitchLinks: FC<{}> = () => {
-  const { locales, currentLocale } = useI18n();
-  const route = getCurrentRoute();
-  // const localesAvailableForCurrentRoute = Object.keys(route);
-  if (!route) {
-    return null;
-  }
+  const { currentLocale, alternates } = useI18n();
 
   return (
     <>
-      {locales.map((locale) => (
+      {alternates.map(({ locale, url }) => (
         <Link
           key={locale}
-          to={route.locales[locale]}
+          to={url}
           style={{
             fontWeight: currentLocale === locale ? 600 : 300,
           }}
