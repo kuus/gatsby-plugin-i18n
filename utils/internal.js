@@ -19,7 +19,7 @@ let optionsPath = path.resolve(__dirname, "../", ".options.json");
 /**
  * @type {string}
  */
-let routesPath = path.resolve(__dirname, "../", ".routes.json");
+const routesPath = path.resolve(__dirname, "../.routes/");
 
 /**
  * 
@@ -107,80 +107,22 @@ const writeI18nOptions = (custom) => {
  * Clean/resets the routes mapping cached to disk
  */
 const cleanI18nRoutes = () => {
-  writeI18nRoutesMap({});
-};
-
-// let cachedRoutesMap;
-/**
- * Read and returns the routes mapping cached to disk
- *
- * FIXME: use gatsby cace mechanism
- */
-const getI18nRoutes = () => {
-  // if (cachedRoutesMap) {
-  //   return cachedRoutesMap;
-  // }
-  let routesMap = {};
-
-  try {
-    routesMap = JSON.parse(fs.readFileSync(routesPath, "utf-8"));
-    // cachedRoutesMap = routesMap;
-  } catch (e) {
-    logger("warn", `Failed to read file ${routesPath}`);
-  }
-
-  return routesMap;
-};
-
-/**
- * Write the routes mapping to disk, mostly in order to be used from the custom
- * Link component
- *
- * @param {GatsbyI18n.RoutesMap} data
- */
-const writeI18nRoutesMap = (data) => {
-  try {
-    const { debug } = getI18nOptions();
-    const parser = debug
-      ? (data) => JSON.stringify(data, null, 2)
-      : (data) => JSON.stringify(data);
-    fs.writeFileSync(routesPath, parser(data), "utf-8");
-  } catch (e) {
-    logger("error", `Failed to write file ${routesPath}`);
-  }
-};
-
-/**
- * Add routes mapping to disk cache file, this helper can be used from your project
- * for instance to dynamically add localised pages like tags in your project's
- * `gatsby-node.js`
- *
- * @param {GatsbyI18n.RoutesMap} data
- */
-const registerI18nRoutes = (data) => {
-  const existingRoutes = getI18nRoutes();
-  writeI18nRoutesMap({ ...existingRoutes, ...data });
+  fs.rmdirSync(routesPath, { recursive: true });
+  fs.mkdirSync(routesPath);
 };
 
 /**
  * Register i18n route url on cache routes map
+ * 
+ * This helper can be used from your project for instance to dynamically add
+ * localised pages like tags in your project's `gatsby-node.js`
  *
  * @param {string} routeId
  * @param {string} locale
  * @param {string} url
  */
 const registerI18nRouteUrl = (routeId, locale, url) => {
-  const existingRoutes = getI18nRoutes();
-  existingRoutes[routeId] = existingRoutes[routeId] || {};
-  existingRoutes[routeId][locale] = url;
-
-  // FIXME: wip dynamic require in Link
-  const baseFolder = path.resolve(__dirname, "../.routes/");
-  if (!fs.existsSync(baseFolder)) {
-    fs.mkdirSync(baseFolder);
-  }
-  fs.writeFileSync(path.join(baseFolder, `${routeId.replace(/\//g, "_")}--${locale}.json`), JSON.stringify({ url }));
-  writeI18nRoutesMap(existingRoutes);
+  fs.writeFileSync(path.join(routesPath, `${routeId.replace(/\//g, "_")}--${locale}.json`), JSON.stringify({ url }));
 };
 
 /**
@@ -433,9 +375,7 @@ module.exports = {
   getI18nConfig,
   getI18nOptions,
   writeI18nOptions,
-  getI18nRoutes,
   cleanI18nRoutes,
-  registerI18nRoutes,
   registerI18nRouteUrl,
   ensureLocalisedMessagesFiles,
   getI18nContext,
