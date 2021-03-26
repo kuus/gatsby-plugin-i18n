@@ -24,14 +24,16 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
         nodes {
           routeId
           fields {
-            ${config.locales.map((locale) => `
+            ${config.locales.map(
+              (locale) => `
             ${locale} {
               nodeId
               locale
               url
               component
             }
-            `)}
+            `
+            )}
           }
         }
       }
@@ -48,7 +50,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   routeNodes.forEach((node) => {
     const { routeId, fields: localesData } = node;
     const availableLocalesData = [];
-    routes[routeId] = {}
+    routes[routeId] = {};
 
     // each fields key represent a locale, we do this in the `onCreateNode`
     // because we cannot extend an already created field hence we just create a
@@ -68,7 +70,10 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     // are less then the configured set of locales add some untranslated SEO
     // friendly pages
     const availableLocales = Object.keys(routes[routeId]);
-    if (untranslatedComponent && availableLocales.length < config.locales.length) {
+    if (
+      untranslatedComponent &&
+      availableLocales.length < config.locales.length
+    ) {
       const missingLocales = config.locales.filter(
         (locale) => !availableLocales.includes(locale)
       );
@@ -79,7 +84,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
         // otherwise just use the `routeId` which is also a valid url slug
         const defaultUrl = routes[routeId][config.defaultLocale]?.url;
         const url = relocaliseUrl(config, locale, defaultUrl || routeId);
-        const translatedIn = availableLocales.map(locale => ({
+        const translatedIn = availableLocales.map((locale) => ({
           locale,
           url: routes[routeId][locale].url,
         }));
@@ -105,7 +110,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   // deleted from the standard createStatefulPages lifecycle in `onCreatePage`
   for (const routeId in routes) {
     const route = routes[routeId];
-    const alternates = Object.keys(route).map(locale => ({
+    const alternates = Object.keys(route).map((locale) => ({
       locale,
       url: route[locale].url,
       fullUrl: baseUrl + route[locale].url,

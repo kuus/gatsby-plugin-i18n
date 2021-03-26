@@ -22,13 +22,13 @@ let optionsPath = path.resolve(__dirname, "../", ".options.json");
 const routesPath = path.resolve(__dirname, "../.routes/");
 
 /**
- * 
+ *
  * @param {{GatsbyI18n.Options}} options
- * @param {string} locale 
+ * @param {string} locale
  */
 const getMessagesPath = ({ messagesPath }, locale) => {
-  return path.join(messagesPath, `${locale}.yml`)
-}
+  return path.join(messagesPath, `${locale}.yml`);
+};
 
 /**
  * We write config to a file so that we can use it from the project implementing
@@ -113,7 +113,7 @@ const cleanI18nRoutes = () => {
 
 /**
  * Register i18n route url on cache routes map
- * 
+ *
  * This helper can be used from your project for instance to dynamically add
  * localised pages like tags in your project's `gatsby-node.js`
  *
@@ -122,7 +122,10 @@ const cleanI18nRoutes = () => {
  * @param {string} url
  */
 const registerI18nRouteUrl = (routeId, locale, url) => {
-  fs.writeFileSync(path.join(routesPath, `${routeId.replace(/\//g, "_")}--${locale}.json`), JSON.stringify({ url }));
+  fs.writeFileSync(
+    path.join(routesPath, `${routeId.replace(/\//g, "_")}--${locale}.json`),
+    JSON.stringify({ url })
+  );
 };
 
 /**
