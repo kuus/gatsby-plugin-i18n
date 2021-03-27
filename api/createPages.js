@@ -81,10 +81,17 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
       missingLocales.forEach((locale) => {
         // now we need to determine the url path of the untranslated route
         // if it exists try using the url assigned to the default locale
-        // otherwise just use the `routeId` which is also a valid url slug
+        // otherwise the first available localised url, otherwise just use the
+        // `routeId` which is also a valid url slug
+        let urlToRelocalise = routeId;
         const defaultRoute = routes[routeId][config.defaultLocale];
-        const defaultUrl = defaultRoute ? defaultRoute.url : "";
-        const url = relocaliseUrl(config, locale, defaultUrl || routeId);
+        const firstAvailableRoute = routes[routeId][availableLocales[0]];
+        if (defaultRoute && defaultRoute.url) {
+          urlToRelocalise = defaultRoute.url;
+        } else if (firstAvailableRoute && firstAvailableRoute.url) {
+          urlToRelocalise = firstAvailableRoute.url;
+        }
+        const url = relocaliseUrl(config, locale, urlToRelocalise);
         const translatedIn = availableLocales.map((locale) => ({
           locale,
           url: routes[routeId][locale].url,

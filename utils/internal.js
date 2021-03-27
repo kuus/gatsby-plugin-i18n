@@ -349,7 +349,7 @@ const localiseUrl = (config, locale, slug) => {
  * @param {string} url
  */
 const relocaliseUrl = (config, locale, url) => {
-  const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
+  const shouldLocaleBeVisible = shouldCreateLocalisedPage(config, locale);
   let foundLocaleInUrl;
 
   for (let i = 0; i < config.locales.length; i++) {
@@ -360,17 +360,16 @@ const relocaliseUrl = (config, locale, url) => {
     }
   }
 
-  if (isLocaleVisible) {
+  if (shouldLocaleBeVisible) {
     if (foundLocaleInUrl) {
       return url.replace(foundLocaleInUrl, locale);
     }
     return normaliseUrlPath(`/${locale}/${url}`);
   }
   if (foundLocaleInUrl) {
-    return url.replace(foundLocaleInUrl, "");
+    return url.replace(`${foundLocaleInUrl}/`, "");
   }
-
-  throw new Error("[gatsby-i18n]: Tried to relocalise a url without success");
+  return url;
 };
 
 module.exports = {
