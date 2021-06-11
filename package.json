@@ -1,6 +1,6 @@
 {
   "name": "@kuus/gatsby-plugin-i18n",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "",
   "author": "kuus <kunderikuus@gmail.com> (http://kunderikuus.net)",
   "license": "MIT",
@@ -20,13 +20,14 @@
   },
   "main": "index.js",
   "dependencies": {
+    "@formatjs/icu-messageformat-parser": "^0.2.1",
     "@formatjs/intl-pluralrules": "^4.0.13",
     "@formatjs/intl-relativetimeformat": "^8.1.4",
-    "babel-plugin-preval": "^5.0.0",
     "comment-parser": "^1.1.4",
     "intl": "^1.2.5",
     "js-yaml": "^4.0.0",
-    "react-intl": "^5.15.0"
+    "react-intl": "^5.15.0",
+    "webpack": "^5.28.0"
   },
   "peerDependencies": {
     "@types/react-helmet": "^6.1.0",

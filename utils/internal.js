@@ -265,15 +265,12 @@ const extractPathParts = (relativePath) => {
   let slug = name === "index" ? dir : `${dir}/${name}`;
   slug = normaliseUrlPath(slug);
 
-  // try to grab last name part after dot
-  let locale = nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
-
-  // if not specified just assume is the default
-  if (!locale) {
-    locale = defaultLocale;
-  }
+  // try to grab last name part after dot, locale can be null if a file does not
+  // specify it in its file name, in `onCreateNode` will manage that situation
+  const locale = nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
+  
   // if specified but not in configured list log an error
-  else if (!locales.includes(locale)) {
+  if (locale && !locales.includes(locale)) {
     logger(
       "error",
       `You need to add the locale ${locale} to the plugin options to render the file ${dir}/${name}`

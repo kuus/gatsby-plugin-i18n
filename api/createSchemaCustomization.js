@@ -2,7 +2,7 @@
 
 const { getI18nConfig } = require("../utils/internal");
 
-const createSchemaCustomization = ({ actions }) => {
+const createSchemaCustomization = ({ actions, createContentDigest }) => {
   const { createFieldExtension, createTypes } = actions;
   const config = getI18nConfig();
 
@@ -101,13 +101,77 @@ const createSchemaCustomization = ({ actions }) => {
     },
   });
 
+  // createFieldExtension({
+  //   name: "frontmatter",
+  //   args: {
+  //     locale: "String",
+  //   },
+  //   extend() {
+  //     return {
+  //       args: {
+  //         locale: "String",
+  //       },
+  //       resolve(source, args) {
+  //         const { locale } = args;
+  //         if (locale) {
+  //           if (source.frontmatter && source.frontmatter[locale]) {
+  //             return source.frontmatter[locale];
+  //           }
+  //         }
+  //         return source.frontmatter;
+  //       },
+  //     };
+  //   },
+  // });
+
+  // createFieldExtension({
+  //   name: "bodyl",
+  //   args: {
+  //     locale: "String",
+  //   },
+  //   extend() {
+  //     return {
+  //       args: {
+  //         locale: "String",
+  //       },
+  //       async resolve(source, args, context, info) {
+  //         const { locale } = args;
+  //         if (locale) {
+  //           if (source.frontmatter && source.frontmatter[locale] && source.frontmatter[locale].body) {
+  //             const value = source.frontmatter[locale].body;
+  //             // Isolate MDX
+  //             const mdxType = info.schema.getType('Mdx');
+  //             // Grab just the body contents of what MDX generates
+  //             const { resolve } = mdxType.getFields().body;
+  //             console.log("value", value);
+
+  //             return resolve({
+  //               rawBody: value,
+  //               internal: {
+  //                 contentDigest: createContentDigest(value), // Used for caching
+  //               }
+  //             }, args, context, info)
+  //             // const { body } = await genMDX({ node: { value } })
+  //             // return body
+  //             // return source.frontmatter[locale].body;
+  //           }
+  //         }
+  //         return source.body || "";
+  //       },
+  //     };
+  //   },
+  // });
+
   // TODO: support also MarkdownRemark other than Mdx?
   createTypes(`
     type Mdx implements Node {
       url: String @url
       locales: [String] @locales
-      route: Boolean @route
+      route: String @route
+      # frontmatter: MdxFrontmatter @frontmatter 
+      # bodyl: String! @bodyl
     }
+
     type File implements Node {
       url: String @url
       locales: [String] @locales

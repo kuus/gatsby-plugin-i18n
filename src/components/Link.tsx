@@ -34,13 +34,13 @@ type _withRoute<TState> = _baseProps<TState> & {
  *
  * TODO: check if we need to use `React.forwardRef`
  */
-export const Link = <TState extends {}>({
+export const Link = React.forwardRef(<TState extends {}>({
   route,
   locale,
   params,
   onClick,
   ...props
-}: GatsbyI18nLinkProps<TState>) => {
+}: GatsbyI18nLinkProps<TState>, ref) => {
   if (route) {
     const i18n = useI18n();
     let to = getRouteUrl(i18n, route, locale);
@@ -71,14 +71,9 @@ export const Link = <TState extends {}>({
         }
       }
 
-      return <GatsbyLink {...props} to={to} onClick={handleClick} />;
+      return <GatsbyLink ref={ref} {...props} to={to} onClick={handleClick} />;
     }
   }
 
-  // this is just for typescript...
-  if (props.to) {
-    return <GatsbyLink onClick={onClick} {...props} />;
-  }
-
   throw new Error("GatsbyI8nLink called without neither `to` nor `route`");
-};
+});

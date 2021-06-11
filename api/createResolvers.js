@@ -1,31 +1,57 @@
 // @ts-check
 
-const createResolvers = ({ createResolvers }) => {
+const createResolvers = ({ createResolvers, createContentDigest }) => {
   // const resolvers = {
   //   Mdx: {
-  //     url: {
-  //       type: "String",
+  //     body: {
   //       args: {
   //         locale: "String",
   //       },
   //       resolve(source, args, context, info) {
-  //         // const a = context.nodeModel.getNodeById("gatsby-plugin-i18n-config");
-  //         const data = context.nodeModel.runQuery({
-  //           query: {
-  //             filter: {
-  //               routeId: { eq: source.fields.routeId },
-  //             },
-  //           },
-  //           type: "I18nRoute",
-  //         });
-  //         console.log("data", data);
-  //         const urlData = data.fields[args.locale];
-  //         if (urlData) {
-  //           return urlData.url;
+  //         const { locale } = args;
+  //         if (locale) {
+  //           if (source.frontmatter && source.frontmatter[locale] && source.frontmatter[locale].body) {
+  //             const value = source.frontmatter[locale].body;
+  //             // Isolate MDX
+  //             const mdxType = info.schema.getType('Mdx');
+  //             // Grab just the body contents of what MDX generates
+  //             const { resolve } = mdxType.getFields().body;
+
+  //             return resolve({
+  //               rawBody: value,
+  //               internal: {
+  //                 contentDigest: createContentDigest(value), // Used for caching
+  //               },
+  //             }, args, context, info)
+  //             // return source.frontmatter[locale].body;
+  //           }
   //         }
-  //         return "";
+  //         return source.body || "";
   //       },
-  //     },
+  //     }
+  //     // url: {
+  //     //   type: "String",
+  //     //   args: {
+  //     //     locale: "String",
+  //     //   },
+  //     //   resolve(source, args, context, info) {
+  //     //     // const a = context.nodeModel.getNodeById("gatsby-plugin-i18n-config");
+  //     //     const data = context.nodeModel.runQuery({
+  //     //       query: {
+  //     //         filter: {
+  //     //           routeId: { eq: source.fields.routeId },
+  //     //         },
+  //     //       },
+  //     //       type: "I18nRoute",
+  //     //     });
+  //     //     console.log("data", data);
+  //     //     const urlData = data.fields[args.locale];
+  //     //     if (urlData) {
+  //     //       return urlData.url;
+  //     //     }
+  //     //     return "";
+  //     //   },
+  //     // },
   //     // urlString: {
   //     //   type: "String",
   //     //   args: {
