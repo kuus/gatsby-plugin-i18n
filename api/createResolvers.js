@@ -16,7 +16,6 @@ const createResolvers = ({ createResolvers, createContentDigest }) => {
   //             const mdxType = info.schema.getType('Mdx');
   //             // Grab just the body contents of what MDX generates
   //             const { resolve } = mdxType.getFields().body;
-
   //             return resolve({
   //               rawBody: value,
   //               internal: {

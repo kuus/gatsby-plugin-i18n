@@ -8,6 +8,33 @@ This plugin is meant to be used with netlify and its [gatsby-plugin-netlify](htt
 - **Pages** and **templates** specific strings are prefixed by the page component name all lowercase minus the prefix `Pages` or `Template`, e.g. for page *about* the component would be `PagesAbout` and the string prefix is `about.`, for the template *blog-single* the component would be `TemplateBlogSingle` and the string prefix is `blogsingle`
 - **Generic** strings not tight to any component or page in particular are prefxed with a `.` dot and begin lowercase, e.g. `.globalMessage`
 
+## Known issues
+
+- Gatsby generates a warning like:
+
+```bash
+warn There are routes that match both page and redirect.
+It will result in page not being accessible; this is
+probably not intentional:
+ - page: "/" and redirect: "/" -> "/it/"
+```
+
+That is fine as the redirect is created with the `Language` [Netlify's specific option](https://www.gatsbyjs.com/plugins/gatsby-plugin-netlify/#redirects) for [`createRedirect`](https://www.gatsbyjs.com/docs/reference/config-files/actions/#createRedirect) and therefore the warning message is misleading as it does not take into account the language based redirect.
+
+- Gatsby's warnings:
+
+```bash
+warn Plugin `@kuus/gatsby-plugin-i18n` has customized the
+ built-in Gatsby GraphQL type `File`. This is allowed,
+but could potentially cause conflicts.
+warn Plugin `gatsby-plugin-mdx` has customized the
+GraphQL type `Mdx`, which has already been defined by the
+ plugin `@kuus/gatsby-plugin-i18n`. This could
+potentially cause conflicts.
+```
+
+are fine... We need to customise those Node's types to have a seamless localization API.
+
 ## Resources
 
 - [Netlify redirects adn localization](https://docs.netlify.com/routing/redirects/redirect-options/#redirect-by-country-or-language)

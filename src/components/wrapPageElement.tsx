@@ -5,7 +5,6 @@ import { getOptions } from "../../utils/options";
 import { logger } from "../../utils";
 import { I18nProvider } from "./I18nContext";
 import { I18nSEO } from "./I18nSEO";
-import { GatsbyI18n } from "../types";
 
 const polyfillIntl = (locale) => {
   locale = locale.split("-")[0];

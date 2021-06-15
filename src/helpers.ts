@@ -1,7 +1,6 @@
 import { useIntl as reactUseIntl } from "react-intl";
 import { navigate as gatsbyNavigate } from "gatsby";
 import { NavigateOptions } from "@reach/router";
-import { GatsbyI18n } from "./types";
 import { normaliseRouteId } from "../utils";
 
 /**

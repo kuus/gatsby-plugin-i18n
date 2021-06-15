@@ -36,12 +36,14 @@ const onPreBootstrap = ({ store, actions }, customOptions) => {
     // /en / 301 (if `hideDefaultLocaleInUrl` is true)
     // / /it/ 301 Language=it
     // / /nl/ 301 Language=nl
-    createRedirect({
-      fromPath: visibleLocale ? "/" : normaliseUrlPath(`/${locale}`),
-      toPath: visibleLocale ? normaliseUrlPath(`/${locale}`) : "/",
-      isPermanent: true,
-      Language: locale,
-    });
+    if (visibleLocale) {
+      createRedirect({
+        fromPath: visibleLocale ? "/" : normaliseUrlPath(`/${locale}`),
+        toPath: visibleLocale ? normaliseUrlPath(`/${locale}`) : "/",
+        isPermanent: true,
+        Language: locale,
+      });
+    }
   });
 };
 

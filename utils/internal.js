@@ -158,9 +158,9 @@ const getMessages = (options, locale) => {
   const fullPath = getMessagesPath(options, locale);
 
   try {
-    const messages = /** @type {object} */ (yaml.load(
-      fs.readFileSync(fullPath, "utf8")
-    ));
+    const messages = /** @type {object} */ (
+      yaml.load(fs.readFileSync(fullPath, "utf8"))
+    );
 
     return flattenMessages(messages);
   } catch (error) {
@@ -268,7 +268,7 @@ const extractPathParts = (relativePath) => {
   // try to grab last name part after dot, locale can be null if a file does not
   // specify it in its file name, in `onCreateNode` will manage that situation
   const locale = nameParts.length > 1 ? nameParts[nameParts.length - 1] : null;
-  
+
   // if specified but not in configured list log an error
   if (locale && !locales.includes(locale)) {
     logger(

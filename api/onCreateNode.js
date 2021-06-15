@@ -8,7 +8,6 @@ const {
   extractFromFilePath,
   getI18nConfig,
   localiseUrl,
-  registerI18nRouteUrl,
 } = require("../utils/internal");
 const { getSlugsFromComment } = require("../utils/parseSourceComment");
 
@@ -93,7 +92,6 @@ const onCreateNode = async (
     createNodeId,
     createContentDigest,
     getNode,
-    getNodes,
     loadNodeContent,
   },
   pluginOptions
@@ -210,16 +208,23 @@ const onCreateNode = async (
           //     node.frontmatter[locale][options.frontmatterKeyForLocalisedSlug]
           //   );
           // }
-          
-          console.log("fake markdown file for nested localised body field to be picked up by MDX");
+
+          console.log(
+            "fake markdown file for nested localised body field to be picked up by MDX"
+          );
 
           const yaml = require("js-yaml");
-          const { body: fakedBody, ...fakedFrontmatter } = node.frontmatter[locale];
+          const { body: fakedBody, ...fakedFrontmatter } =
+            node.frontmatter[locale];
           let fakeMdContent = "---\n";
           fakeMdContent += yaml.dump(fakedFrontmatter);
           fakeMdContent += "---\n\n";
           fakeMdContent += fakedBody;
-          fs.writeFileSync(nodePath.replace("index.md", `.index.${locale}.md`), fakeMdContent, "utf-8");
+          fs.writeFileSync(
+            nodePath.replace("index.md", `.index.${locale}.md`),
+            fakeMdContent,
+            "utf-8"
+          );
         });
 
         // we have created separate nodes, we can create the all-encompassing-locales
@@ -264,7 +269,6 @@ const onCreateNode = async (
 
   // enter here only nodes that will become routes
   if (isRouteNode) {
-
     // create node fields common to File and Markdown nodes
     createNodeField({ node, name: "routeId", value: nodeData.routeId });
 

@@ -1,10 +1,12 @@
 import React, { useContext } from "react";
-import { GatsbyI18n } from "../types";
 import { defaultConfig } from "../../utils/options";
 
 const I18nContext = React.createContext<GatsbyI18n.I18n>({
   ...defaultConfig,
-  alternates: []
+  alternates: [],
+  // these two are just to don't make typescript complain...
+  currentLocale: "",
+  messages: {},
 });
 
 export const I18nProvider = I18nContext.Provider;

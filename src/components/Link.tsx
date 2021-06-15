@@ -75,5 +75,9 @@ export const Link = React.forwardRef(<TState extends {}>({
     }
   }
 
+  if (props.to) {
+    return <GatsbyLink ref={ref} {...props} />;
+  }
+
   throw new Error("GatsbyI8nLink called without neither `to` nor `route`");
 });

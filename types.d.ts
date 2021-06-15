@@ -1,4 +1,4 @@
-export namespace GatsbyI18n {
+declare namespace GatsbyI18n {
   // type Options = ReturnType<import("./utils/options").getOptions>;
 
   export type Options = {

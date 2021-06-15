@@ -11,6 +11,5 @@
     "esModuleInterop": true,
     "skipLibCheck": true
     // "jsxFactory": "createElement"
-  },
-  "files": ["./src/types.d.ts"]
+  }
 }
