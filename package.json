@@ -26,14 +26,14 @@
     "comment-parser": "^1.1.5",
     "intl": "^1.2.5",
     "js-yaml": "^4.1.0",
-    "react-intl": "^5.20.2",
-    "webpack": "^5.39.0"
+    "react-intl": "^5.20.2"
   },
   "peerDependencies": {
     "@types/react-helmet": "^6.1.1",
     "gatsby": "^3.x.x",
     "react": "^17.0.x",
-    "react-helmet": "^6.1.0"
+    "react-helmet": "^6.1.0",
+    "webpack": "^5.39.0"
   },
   "devDependencies": {
     "prettier": "^2.3.1"
