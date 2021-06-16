@@ -158,9 +158,9 @@ const getMessages = (options, locale) => {
   const fullPath = getMessagesPath(options, locale);
 
   try {
-    const messages = /** @type {object} */ (
-      yaml.load(fs.readFileSync(fullPath, "utf8"))
-    );
+    const messages = /** @type {object} */ (yaml.load(
+      fs.readFileSync(fullPath, "utf8")
+    ));
 
     return flattenMessages(messages);
   } catch (error) {
@@ -197,14 +197,21 @@ const ensureLocalisedMessagesFiles = ({ locales }, options) => {
  * @returns {GatsbyI18n.PageContext}
  */
 const getI18nContext = (locale, additional = {}) => {
-  const { locales, defaultLocale } = getI18nConfig();
+  const config = getI18nConfig();
+  const { locales, defaultLocale, hideDefaultLocaleInUrl } = config;
   let options = getI18nOptions();
 
   locale = locale || defaultLocale;
   const messages = getMessages(options, locale);
+  const url = (urlPath) => {
+    const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
+    const fullPath = isLocaleVisible ? `/${locale}/${urlPath}` : `/${urlPath}`;
+    return normaliseUrlPath(fullPath);
+  };
 
   return {
     i18n: {
+      url,
       locales,
       defaultLocale,
       currentLocale: locale,
@@ -253,7 +260,7 @@ const extractFromFilePath = (fileAbsolutePath) => {
  * @param {string} relativePath
  */
 const extractPathParts = (relativePath) => {
-  const { locales, defaultLocale } = getI18nConfig();
+  const { locales } = getI18nConfig();
   let { dir, name } = path.parse(relativePath);
   const nameParts = name.split(".");
   // remove optional locale info from filename, e.g. "index.en.md"
