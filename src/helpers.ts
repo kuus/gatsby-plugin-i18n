@@ -1,7 +1,7 @@
 import { useIntl as reactUseIntl } from "react-intl";
 import { navigate as gatsbyNavigate } from "gatsby";
 import { NavigateOptions } from "@reach/router";
-import { normaliseRouteId } from "../utils";
+import { normaliseRouteId, normaliseUrlPath, shouldCreateLocalisedPage } from "../utils";
 
 /**
  * Alias export for `useIntl` from `react-intl`, to ease import statements
@@ -12,6 +12,27 @@ export const useIntl = reactUseIntl;
  * Output a translated string by id, a shortcut to `useIntl().formatMessage`
  */
 export const t = (id: string, data?: { [key: string]: string }): string => reactUseIntl().formatMessage({ id }, data);
+
+/**
+ * Format URL path
+ * 
+ * - Important: do not pass here absolute URLs!
+ * - It uses the `currentLocale`
+ * - It takes into account the `hideDefaultLocaleInUrl` configuration.
+ * - It normalises slashes.
+ * 
+ * This is not add in the `createPages` lifecycle as from there the `pageContext`
+ * is serialised before being passed on to the page react component.
+ * Therefore we dynamically add to the i18n context this function in the
+ * `wrapPageElement` component.
+ */
+export const formatUrlPath = (i18n: GatsbyI18n.I18n, urlPath) => {
+  const { currentLocale } = i18n;
+  const isLocaleVisible = shouldCreateLocalisedPage(i18n, currentLocale);
+  const fullPath = isLocaleVisible ? `/${currentLocale}/${urlPath}` : `/${urlPath}`;
+  return normaliseUrlPath(fullPath);
+}
+
 
 /**
  * Get the localised destination URL based on the given `routeId`

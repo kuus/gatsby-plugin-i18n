@@ -1,10 +1,10 @@
 // @ts-check
 
-const { getI18nConfig } = require("../utils/internal");
+// const { getI18nConfig } = require("../utils/internal");
 
 const createSchemaCustomization = ({ actions, createContentDigest }) => {
   const { createFieldExtension, createTypes } = actions;
-  const config = getI18nConfig();
+  // const i18n = getI18nConfig();
 
   createTypes(`
     type I18n implements Node {
@@ -20,19 +20,12 @@ const createSchemaCustomization = ({ actions, createContentDigest }) => {
     }
   `);
 
-  // createTypes(`
-  //   type I18nRouteUrl {
-  //     locale: String
-  //     url: String
-  //   }
-  // `);
-
   // add `url` on Mdx and File nodes to ease the "link->to" data retrieval
   createFieldExtension({
     name: "url",
     args: {
       locale: "String",
-      // defaultValue: config.defaultLocale
+      // defaultValue: i18n.defaultLocale
     },
     extend(options) {
       return {
@@ -178,26 +171,6 @@ const createSchemaCustomization = ({ actions, createContentDigest }) => {
       route: String @route
     }
   `);
-
-  // code examples from gatsby-theme-i18n:
-  // createTypes(`
-  //   type I18n implements Node {
-  //     locales: [String]
-  //     defaultLocale: String
-  //     hideDefaultLocaleInUrl: Boolean
-  //     configPath: String
-  //     config: [Locale]
-  //   }
-
-  //   type Locale {
-  //     code: String
-  //     hrefLang: String
-  //     dateFormat: String
-  //     langDir: String
-  //     localName: String
-  //     name: String
-  //   }
-  // `)
 };
 
 module.exports = createSchemaCustomization;

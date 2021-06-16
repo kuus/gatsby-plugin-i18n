@@ -10,12 +10,12 @@ const sourceNodes = (
   const { createNode } = actions;
 
   const options = getOptions(pluginOptions);
-  // const config = require(options.configPath);
-  const config = getI18nConfig();
+  // const i18n = require(options.configPath);
+  const i18n = getI18nConfig();
 
   const configNode = {
     ...options,
-    ...config,
+    ...i18n,
   };
 
   createNode({

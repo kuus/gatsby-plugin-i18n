@@ -1,13 +1,12 @@
 // @ts-check
 
-const { normaliseUrlPath } = require("../utils");
+const { normaliseUrlPath, shouldCreateLocalisedPage } = require("../utils");
 const {
   writeI18nOptions,
   ensureI18nConfig,
   ensureLocalisedMessagesFiles,
   getI18nConfig,
   cleanI18nRoutes,
-  shouldCreateLocalisedPage,
 } = require("../utils/internal");
 const { getOptions } = require("../utils/options");
 
@@ -18,15 +17,15 @@ const onPreBootstrap = ({ store, actions }, customOptions) => {
   writeI18nOptions(options);
   ensureI18nConfig(program.directory);
 
-  const config = getI18nConfig();
+  const i18n = getI18nConfig();
 
-  ensureLocalisedMessagesFiles(config, options);
+  ensureLocalisedMessagesFiles(i18n, options);
   cleanI18nRoutes();
 
   const { createRedirect } = actions;
 
-  config.locales.forEach((locale) => {
-    const visibleLocale = shouldCreateLocalisedPage(config, locale);
+  i18n.locales.forEach((locale) => {
+    const visibleLocale = shouldCreateLocalisedPage(i18n, locale);
 
     // create root redirects for netlify, create these here onPreBootstrap as
     // netlify redirects priority is top to bottom, what is read first acts

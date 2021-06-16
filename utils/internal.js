@@ -4,7 +4,12 @@ const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 const { getOptions, getConfig } = require("./options");
-const { logger, normaliseUrlPath, normaliseRouteId } = require(".");
+const {
+  logger,
+  normaliseUrlPath,
+  normaliseRouteId,
+  shouldCreateLocalisedPage,
+} = require(".");
 
 /**
  * @type {string}
@@ -63,7 +68,7 @@ const ensureI18nConfig = (baseDir) => {
 };
 
 /**
- * @returns {GatsbyI18n.Config}
+ * @returns {GatsbyI18n.I18n}
  */
 const getI18nConfig = () => {
   try {
@@ -177,7 +182,7 @@ const getMessages = (options, locale) => {
  * Ensure that files with translated strings exist, if the don't they are created
  * If a localised messages file (e.g. `en.yml`) does not exist it creates it
  *
- * @param {GatsbyI18n.Config} config
+ * @param {GatsbyI18n.I18n} i18n
  * @param {GatsbyI18n.Options} options
  */
 const ensureLocalisedMessagesFiles = ({ locales }, options) => {
@@ -197,24 +202,19 @@ const ensureLocalisedMessagesFiles = ({ locales }, options) => {
  * @returns {GatsbyI18n.PageContext}
  */
 const getI18nContext = (locale, additional = {}) => {
-  const config = getI18nConfig();
-  const { locales, defaultLocale, hideDefaultLocaleInUrl } = config;
+  const i18n = getI18nConfig();
+  const { locales, defaultLocale, hideDefaultLocaleInUrl } = i18n;
   let options = getI18nOptions();
 
   locale = locale || defaultLocale;
   const messages = getMessages(options, locale);
-  const url = (urlPath) => {
-    const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
-    const fullPath = isLocaleVisible ? `/${locale}/${urlPath}` : `/${urlPath}`;
-    return normaliseUrlPath(fullPath);
-  };
 
   return {
     i18n: {
-      url,
       locales,
       defaultLocale,
       currentLocale: locale,
+      hideDefaultLocaleInUrl,
       messages,
       ...additional,
     },
@@ -301,25 +301,13 @@ const getTemplateBasename = (name) => {
 };
 
 /**
- *
- * @param {GatsbyI18n.Config} config
- * @param {string} locale
- */
-const shouldCreateLocalisedPage = (config, locale) => {
-  if (locale === config.defaultLocale && config.hideDefaultLocaleInUrl) {
-    return false;
-  }
-  return true;
-};
-
-/**
  * Put defaultLocale as last in the array, this is useful to create netlify
  * redirects in the right order
  *
- * @param {GatsbyI18n.Config} config
+ * @param {GatsbyI18n.I18n} i18n
  */
-const reorderLocales = (config) => {
-  const { locales, defaultLocale } = config;
+const reorderLocales = (i18n) => {
+  const { locales, defaultLocale } = i18n;
   const sorted = [...locales];
   const oldIdx = sorted.indexOf(defaultLocale);
   const newIdx = sorted.length - 1;
@@ -332,14 +320,14 @@ const reorderLocales = (config) => {
  * Gives the URL variant for the given locale and slug according to the current
  * configuration
  *
- * @param {GatsbyI18n.Config} config
+ * @param {GatsbyI18n.I18n} i18n
  * @param {string} locale
  * @param {string} slug
  */
-const localiseUrl = (config, locale, slug) => {
+const localiseUrl = (i18n, locale, slug) => {
   const urlWithLocale = normaliseUrlPath(`/${locale}/${slug}`);
   const urlWithoutLocale = normaliseUrlPath(`/${slug}`);
-  const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
+  const isLocaleVisible = shouldCreateLocalisedPage(i18n, locale);
 
   return isLocaleVisible ? urlWithLocale : urlWithoutLocale;
 };
@@ -348,16 +336,16 @@ const localiseUrl = (config, locale, slug) => {
  * Gives the URL for the given locale based on another already localised URL
  * and according to the current configuration
  *
- * @param {GatsbyI18n.Config} config
+ * @param {GatsbyI18n.I18n} i18n
  * @param {string} locale
  * @param {string} url
  */
-const relocaliseUrl = (config, locale, url) => {
-  const shouldLocaleBeVisible = shouldCreateLocalisedPage(config, locale);
+const relocaliseUrl = (i18n, locale, url) => {
+  const shouldLocaleBeVisible = shouldCreateLocalisedPage(i18n, locale);
   let foundLocaleInUrl;
 
-  for (let i = 0; i < config.locales.length; i++) {
-    const configLocale = config.locales[i];
+  for (let i = 0; i < i18n.locales.length; i++) {
+    const configLocale = i18n.locales[i];
     if (url.startsWith(`/${configLocale}/`)) {
       foundLocaleInUrl = configLocale;
       break;

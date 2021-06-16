@@ -1,22 +1,19 @@
 // @ts-check
 
 const { getOptions } = require("../utils/options");
-const {
-  getI18nConfig,
-  shouldCreateLocalisedPage,
-  reorderLocales,
-} = require("../utils/internal");
+const { shouldCreateLocalisedPage } = require("../utils");
+const { getI18nConfig, reorderLocales } = require("../utils/internal");
 
 const onPostBootstrap = ({ actions }, pluginOptions) => {
   const { createRedirect } = actions;
   const options = getOptions(pluginOptions);
-  const config = getI18nConfig();
+  const i18n = getI18nConfig();
 
   // create these redirects for netlify:
   // @see https://answers.netlify.com/t/custom-localised-404-page-not-working/8842
   if (options.hasSplatRedirects) {
-    config.locales.forEach((locale) => {
-      const visibleLocale = shouldCreateLocalisedPage(config, locale);
+    i18n.locales.forEach((locale) => {
+      const visibleLocale = shouldCreateLocalisedPage(i18n, locale);
 
       const redirect = {
         fromPath: visibleLocale ? "/*" : `/${locale}/*`,
@@ -27,7 +24,7 @@ const onPostBootstrap = ({ actions }, pluginOptions) => {
       // not need it, request should by default follow the default localised
       // urls, either if they have visible locale or not (that is determined
       // according to the option `hideDefaultLocaleInUrl`)
-      if (locale !== config.defaultLocale) {
+      if (locale !== i18n.defaultLocale) {
         redirect.Language = locale;
       }
 
@@ -43,10 +40,10 @@ const onPostBootstrap = ({ actions }, pluginOptions) => {
   // statusCode, hence we "manually" create the right redirect here.
   // we sort the locales here in order to get the right priorities in
   // the netlify `_redirects` file
-  const sortedLocales = reorderLocales(config);
+  const sortedLocales = reorderLocales(i18n);
 
   sortedLocales.forEach((locale) => {
-    const isLocaleVisible = shouldCreateLocalisedPage(config, locale);
+    const isLocaleVisible = shouldCreateLocalisedPage(i18n, locale);
 
     createRedirect({
       fromPath: isLocaleVisible ? `/${locale}/*` : "/*",

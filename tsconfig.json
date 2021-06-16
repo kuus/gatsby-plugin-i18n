@@ -9,7 +9,11 @@
     "declarationDir": "./dist",
     "lib": ["es2016", "dom"],
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
     // "jsxFactory": "createElement"
+    "typeRoots": [
+      "node_modules/@types",
+      "./index.d.ts"
+    ]
   }
 }

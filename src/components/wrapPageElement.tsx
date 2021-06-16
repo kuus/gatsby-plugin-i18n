@@ -3,6 +3,7 @@ import { WrapPageElementBrowserArgs } from "gatsby";
 import { IntlProvider } from "react-intl";
 import { getOptions } from "../../utils/options";
 import { logger } from "../../utils";
+import { formatUrlPath } from "../helpers";
 import { I18nProvider } from "./I18nContext";
 import { I18nSEO } from "./I18nSEO";
 
@@ -61,7 +62,9 @@ export const wrapPageElement = (
       defaultLocale={i18n.defaultLocale}
       messages={i18n.messages}
     >
-      <I18nProvider value={i18n}>
+      <I18nProvider
+        value={{ ...i18n, url: (urlPath) => formatUrlPath(i18n, urlPath) }}
+      >
         <I18nSEO />
         {element}
       </I18nProvider>

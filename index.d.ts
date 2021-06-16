@@ -1,8 +1,7 @@
-export * from "./index";
-
 declare namespace GatsbyI18n {
-  // type Options = ReturnType<import("./utils/options").getOptions>;
+  export * from "./index";
 
+  // type Options = ReturnType<import("./utils/options").getOptions>;
   export type Options = {
     /** @default false */
     debug: boolean;
@@ -51,15 +50,8 @@ declare namespace GatsbyI18n {
     locales: string[];
     defaultLocale: string;
     currentLocale: string;
+    hideDefaultLocaleInUrl: boolean;
     messages: { [key: string]: string };
-    /**
-     * Relative url formatter according to the `currentLocale.
-     * 
-     * - Important: do not pass here absolute URLs!
-     * - It takes into account the `hideDefaultLocaleInUrl` configuration.
-     * - It normalises slashes.
-     */
-    url: (urlPath?: string) => string;
     alternates: {
       locale: string;
       url: string;
@@ -69,6 +61,24 @@ declare namespace GatsbyI18n {
       locale: string;
       url: string;
     }[];
+  };
+  
+  export type Context = {
+    i18n: I18n & {
+      /**
+       * Relative url formatter according to the `currentLocale.
+       * 
+       * - Important: do not pass here absolute URLs!
+       * - It takes into account the `hideDefaultLocaleInUrl` configuration.
+       * - It normalises slashes.
+       * 
+       * This is not add in the `createPages` lifecycle as from there the `pageContext`
+       * is serialised before being passed on to the page react component.
+       * Therefore we dynamically add to the i18n context this function in the
+       * `wrapPageElement` component.
+       */
+      url: (urlPath?: string) => string;
+    };
   }; 
   
   export type PageContext = {

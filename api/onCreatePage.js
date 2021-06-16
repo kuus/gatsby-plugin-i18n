@@ -34,7 +34,7 @@ const {
 const onCreatePage = ({ page, actions }) => {
   const { createPage, deletePage } = actions;
   const options = getI18nOptions();
-  const config = getI18nConfig();
+  const i18n = getI18nConfig();
   const { templateName } = options;
   const templateBasename = getTemplateBasename(templateName);
 
@@ -56,7 +56,7 @@ const onCreatePage = ({ page, actions }) => {
       matchPath: "/404.html",
       context: {
         ...page.context,
-        ...getI18nContext(config.defaultLocale, { alternates: [] }),
+        ...getI18nContext(i18n.defaultLocale, { alternates: [] }),
       },
     });
   } else {

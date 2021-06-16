@@ -12,23 +12,23 @@ const {
 const { getSlugsFromComment } = require("../utils/parseSourceComment");
 
 /**
- * @param {GatsbyI18n.Config} config
+ * @param {GatsbyI18n.I18n} i18n
  * @param {string} absolutePath
  */
-const getFileRouteComponents = (config, absolutePath) => {
+const getFileRouteComponents = (i18n, absolutePath) => {
   const output = {};
   // look for a localised component name for this absolutePath, for instance
   // look for `/my-page/index.it.tsx` given the absolutePath `/my-page/index.tsx`
   const { dir, ext, name } = path.parse(absolutePath);
   let nameCleaned = name;
 
-  config.locales.forEach((locale) => {
+  i18n.locales.forEach((locale) => {
     if (name.endsWith(`.${locale}`)) {
       nameCleaned = name.replace(`.${locale}`, "");
     }
   });
 
-  config.locales.forEach((locale) => {
+  i18n.locales.forEach((locale) => {
     const pathToCheck = path.format({
       dir,
       name: `${nameCleaned}.${locale}`,
@@ -46,7 +46,7 @@ const getFileRouteComponents = (config, absolutePath) => {
   });
 
   if (fs.existsSync(pathToCheckUnsuffixed)) {
-    output[config.defaultLocale] = pathToCheckUnsuffixed;
+    output[i18n.defaultLocale] = pathToCheckUnsuffixed;
   }
 
   return output;
@@ -98,7 +98,7 @@ const onCreateNode = async (
 ) => {
   const { createNodeField } = actions;
   const options = getOptions(pluginOptions);
-  const config = getI18nConfig();
+  const i18n = getI18nConfig();
 
   // TODO: respect this option:
   // const normalisedExcludedPaths = excludePaths.map(normaliseUrlPath);
@@ -122,14 +122,14 @@ const onCreateNode = async (
     isRouteNode = true;
     const nodeContent = await loadNodeContent(node);
     const customSlugs = getSlugsFromComment(nodeContent);
-    const localisedComponents = getFileRouteComponents(config, nodePath);
+    const localisedComponents = getFileRouteComponents(i18n, nodePath);
 
     // the same File node is responsible for multiple locales only if it does
     // not have a specific component for each of them
     localesManagedByNode =
       Object.keys(localisedComponents).length === 1
-        ? config.locales
-        : [config.defaultLocale];
+        ? i18n.locales
+        : [i18n.defaultLocale];
 
     // slug overriding, we iterate over all the locales as File nodes always
     // have all locales since they can always just use the hook `useI18n` and
@@ -138,7 +138,7 @@ const onCreateNode = async (
       // add custom routes urls retrieved from special I18n comment
       // or add route urls based on the info extracted from the node file path
       const url = localiseUrl(
-        config,
+        i18n,
         locale,
         customSlugs[locale] || nodeData.slug
       );
@@ -191,7 +191,7 @@ const onCreateNode = async (
       // ---
       if (node.frontmatter) {
         localesManagedByNode = Object.keys(node.frontmatter).filter((key) =>
-          config.locales.includes(key)
+          i18n.locales.includes(key)
         );
         shouldQuit = true;
 
@@ -238,7 +238,7 @@ const onCreateNode = async (
 
     localesManagedByNode.forEach((locale) => {
       const url = localiseUrl(
-        config,
+        i18n,
         locale,
         customSlugs[locale] || nodeData.slug
       );

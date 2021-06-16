@@ -12,7 +12,7 @@ const {
 const createPages = async ({ graphql, actions }, pluginOptions) => {
   const { createPage } = actions;
   const { debug, untranslatedComponent } = getOptions(pluginOptions);
-  const config = getI18nConfig();
+  const i18n = getI18nConfig();
   const result = await graphql(`
     query {
       site {
@@ -24,7 +24,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
         nodes {
           routeId
           fields {
-            ${config.locales.map(
+            ${i18n.locales.map(
               (locale) => `
             ${locale} {
               nodeId
@@ -72,9 +72,9 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     const availableLocales = Object.keys(routes[routeId]);
     if (
       untranslatedComponent &&
-      availableLocales.length < config.locales.length
+      availableLocales.length < i18n.locales.length
     ) {
-      const missingLocales = config.locales.filter(
+      const missingLocales = i18n.locales.filter(
         (locale) => !availableLocales.includes(locale)
       );
 
@@ -84,14 +84,14 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
         // otherwise the first available localised url, otherwise just use the
         // `routeId` which is also a valid url slug
         let urlToRelocalise = routeId;
-        const defaultRoute = routes[routeId][config.defaultLocale];
+        const defaultRoute = routes[routeId][i18n.defaultLocale];
         const firstAvailableRoute = routes[routeId][availableLocales[0]];
         if (defaultRoute && defaultRoute.url) {
           urlToRelocalise = defaultRoute.url;
         } else if (firstAvailableRoute && firstAvailableRoute.url) {
           urlToRelocalise = firstAvailableRoute.url;
         }
-        const url = relocaliseUrl(config, locale, urlToRelocalise);
+        const url = relocaliseUrl(i18n, locale, urlToRelocalise);
         const translatedIn = availableLocales.map((locale) => ({
           locale,
           url: routes[routeId][locale].url,
