@@ -33,7 +33,6 @@ export const formatUrlPath = (i18n: GatsbyI18n.I18n, urlPath) => {
   return normaliseUrlPath(fullPath);
 }
 
-
 /**
  * Get the localised destination URL based on the given `routeId`
  *

@@ -46,7 +46,7 @@ const normaliseRouteId = (input) => {
  * @param {GatsbyI18n.I18n} i18n
  * @param {string} locale
  */
- const shouldCreateLocalisedPage = (i18n, locale) => {
+const shouldCreateLocalisedPage = (i18n, locale) => {
   if (locale === i18n.defaultLocale && i18n.hideDefaultLocaleInUrl) {
     return false;
   }

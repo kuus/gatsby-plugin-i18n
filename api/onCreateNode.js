@@ -63,6 +63,7 @@ const getMarkdownRouteComponent = (
   fileAbsolutePath,
   localisedFrontmatter
 ) => {
+  const { debug, templateName } = options;
   let component;
 
   if (localisedFrontmatter.template) {
@@ -73,12 +74,11 @@ const getMarkdownRouteComponent = (
       `${localisedFrontmatter.template}.tsx`
     );
   } else {
-    const { templateName } = options;
     const relativeDir = path.dirname(fileAbsolutePath);
     component = path.resolve(relativeDir, templateName);
   }
 
-  if (!fs.existsSync(component)) {
+  if (debug && !fs.existsSync(component)) {
     logger("warn", `No template component found for ${fileAbsolutePath}`);
   }
 

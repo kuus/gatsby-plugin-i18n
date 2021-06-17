@@ -163,9 +163,9 @@ const getMessages = (options, locale) => {
   const fullPath = getMessagesPath(options, locale);
 
   try {
-    const messages = /** @type {object} */ (yaml.load(
-      fs.readFileSync(fullPath, "utf8")
-    ));
+    const messages = /** @type {object} */ (
+      yaml.load(fs.readFileSync(fullPath, "utf8"))
+    );
 
     return flattenMessages(messages);
   } catch (error) {
