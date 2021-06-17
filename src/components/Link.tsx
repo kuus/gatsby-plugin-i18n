@@ -79,5 +79,6 @@ export const Link = React.forwardRef(<TState extends {}>({
     return <GatsbyLink ref={ref} {...props} />;
   }
 
-  throw new Error("GatsbyI8nLink called without neither `to` nor `route`");
+  return <span data-route={route} ref={ref}>{props.children}</span>;
+  // throw new Error("GatsbyI8nLink called without neither `to` nor `route`");
 });
