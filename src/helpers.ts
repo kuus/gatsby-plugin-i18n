@@ -46,7 +46,13 @@ export const formatUrlPath = (i18n: GatsbyI18n.I18n, urlPath) => {
 export const getRouteUrl = (i18n: GatsbyI18n.I18n, routeId: string, locale?: string): string => {
   locale = locale || i18n.currentLocale;
   routeId = normaliseRouteId(routeId);
-  const localisedTo = require(`../.routes/${routeId.replace(/\//g, "_")}--${locale}.json`).url;
+  let localisedTo = "";
+  
+  try {
+    const data = require(`../.routes/${routeId.replace(/\//g, "_")}--${locale}.json`)
+    if (data) localisedTo = data.url;
+  } catch(e) {
+  }
 
   if (typeof window === "undefined") {
     return localisedTo;

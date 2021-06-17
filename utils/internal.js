@@ -28,7 +28,7 @@ const routesPath = path.resolve(__dirname, "../.routes/");
 
 /**
  *
- * @param {{GatsbyI18n.Options}} options
+ * @param {GatsbyI18n.Options} options
  * @param {string} locale
  */
 const getMessagesPath = ({ messagesPath }, locale) => {
