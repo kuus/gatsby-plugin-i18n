@@ -3,6 +3,8 @@ declare namespace GatsbyI18n {
 
   // type Options = ReturnType<import("./utils/options").getOptions>;
   export type Options = {
+    /** @default  "" */
+    baseUrl: string;
     /** @default false */
     debug: boolean;
     /** @default "src/content/settings/i18n" */
@@ -27,8 +29,6 @@ declare namespace GatsbyI18n {
   };
 
   export type Config = {
-    /** @default  "" */
-    baseUrl: string;
     /** @default  ["en"] */
     locales: string[];
     /** @default  "en" */

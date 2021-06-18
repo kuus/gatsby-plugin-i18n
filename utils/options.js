@@ -4,6 +4,7 @@
  * @type {GatsbyI18n.Options}
  */
 const defaultOptions = {
+  baseUrl: "",
   debug: false,
   // paths
   configPath: "src/content/settings/i18n/config.yml",
@@ -23,7 +24,6 @@ const defaultOptions = {
  * @type {GatsbyI18n.Config}
  */
 const defaultConfig = {
-  baseUrl: "",
   locales: ["en"],
   defaultLocale: "en",
   hideDefaultLocaleInUrl: true,

@@ -11,15 +11,10 @@ const {
 
 const createPages = async ({ graphql, actions }, pluginOptions) => {
   const { createPage } = actions;
-  const { debug, untranslatedComponent } = getOptions(pluginOptions);
+  let { baseUrl, debug, untranslatedComponent } = getOptions(pluginOptions);
   const i18n = getI18nConfig();
   const result = await graphql(`
     query {
-      site {
-        siteMetadata {
-          siteUrl
-        }
-      }
       allI18NRoute {
         nodes {
           routeId
@@ -42,7 +37,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
 
   // get baseUrl to construct alternates SEO friendly links, remove trailing
   // slash as routes urls will always have it
-  const baseUrl = result.data.site.siteMetadata.siteUrl.replace(/\/+$/, "");
+  baseUrl = baseUrl.replace(/\/+$/, "");
   const routeNodes = result.data.allI18NRoute.nodes;
   const routes = {};
 
