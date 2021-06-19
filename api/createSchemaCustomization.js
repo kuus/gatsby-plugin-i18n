@@ -1,10 +1,27 @@
 // @ts-check
 
-// const { getI18nConfig } = require("../utils/internal");
+const { getI18nConfig } = require("../utils/internal");
 
-const createSchemaCustomization = ({ actions, createContentDigest }) => {
+const createSchemaCustomization = ({ actions, schema, createContentDigest }) => {
   const { createFieldExtension, createTypes } = actions;
-  // const i18n = getI18nConfig();
+  const i18n = getI18nConfig();
+
+  // const typeDefs = [
+  //   schema.buildObjectType({
+  //     name: "I18nRoute",
+  //     fields: {
+  //       name: "String!",
+  //       firstName: "String!",
+  //       email: "String!",
+  //       receivedSwag: {
+  //         type: "Boolean",
+  //         resolve: source => source.receivedSwag || false,
+  //       },
+  //     },
+  //     interfaces: ["Node"],
+  //   }),
+  // ]
+  // createTypes(typeDefs)
 
   createTypes(`
     type I18n implements Node {
@@ -15,8 +32,22 @@ const createSchemaCustomization = ({ actions, createContentDigest }) => {
   `);
 
   createTypes(`
+    type I18nRouteFieldsLocale {
+      locale: String!
+      url: String!
+      component: String!
+      nodeId: String!
+    }
+
+    type I18nRouteFields {
+      ${i18n.locales.map(locale => {
+        return `${locale}: I18nRouteFieldsLocale`
+      })}
+    }
+
     type I18nRoute implements Node {
       routeId: String!
+      fields: I18nRouteFields
     }
   `);
 
