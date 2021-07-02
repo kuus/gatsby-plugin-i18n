@@ -14,17 +14,29 @@ const {
 /**
  * @type {string}
  */
+let cachePath;
+
+/**
+ * @type {string}
+ */
 let configPath;
 
-/**
- * @type {string}
- */
-let optionsPath = path.resolve(__dirname, "../", ".options.json");
+const getOptionsPath = () => path.join(cachePath, "gatsby-plugin-i18n-options.json");
+
+const getRoutesPath = () => path.join(cachePath, "gatsby-plugin-i18n-routes.json");
 
 /**
- * @type {string}
+ * Set custom cache path simply in the standard Gatsby's `.cache` folder of
+ * the current project
+ * 
+ * @param {string} programDirectory Value of Gatsby's `program.directory`
  */
-const routesPath = path.resolve(__dirname, "../.routes/");
+const setCachePath = (programDirectory) => {
+  cachePath = path.join(programDirectory, ".cache/gatsby-plugin-i18n");
+  if (!fs.existsSync(cachePath)) {
+    fs.mkdirSync(cachePath);
+  }
+}
 
 /**
  *
@@ -33,6 +45,20 @@ const routesPath = path.resolve(__dirname, "../.routes/");
  */
 const getMessagesPath = ({ messagesPath }, locale) => {
   return path.join(messagesPath, `${locale}.yml`);
+};
+
+/**
+ * @returns {GatsbyI18n.I18n}
+ */
+const getI18nConfig = () => {
+  try {
+    const data = fs.readFileSync(configPath, "utf8");
+    const ext = path.extname(configPath);
+    const content = ext === ".yml" ? yaml.load(data) : JSON.parse(data);
+    return content;
+  } catch (e) {
+    logger("error", `Failed to read file ${configPath}`);
+  }
 };
 
 /**
@@ -46,7 +72,7 @@ const getMessagesPath = ({ messagesPath }, locale) => {
  *
  * @param {string} baseDir
  */
-const ensureI18nConfig = (baseDir) => {
+ const ensureI18nConfig = (baseDir) => {
   const { debug, configPath: _configPath } = getI18nOptions();
 
   configPath = path.join(baseDir, _configPath);
@@ -68,23 +94,10 @@ const ensureI18nConfig = (baseDir) => {
 };
 
 /**
- * @returns {GatsbyI18n.I18n}
- */
-const getI18nConfig = () => {
-  try {
-    const data = fs.readFileSync(configPath, "utf8");
-    const ext = path.extname(configPath);
-    const content = ext === ".yml" ? yaml.load(data) : JSON.parse(data);
-    return content;
-  } catch (e) {
-    logger("error", `Failed to read file ${configPath}`);
-  }
-};
-
-/**
  * @returns {GatsbyI18n.Options}
  */
 const getI18nOptions = () => {
+  const optionsPath = getOptionsPath();
   try {
     return getOptions(require(optionsPath));
   } catch (e) {
@@ -98,7 +111,8 @@ const getI18nOptions = () => {
  *
  * @param {Partial<GatsbyI18n.Options>} custom
  */
-const writeI18nOptions = (custom) => {
+ const writeI18nOptions = (custom) => {
+  const optionsPath = getOptionsPath();
   const data = getOptions(custom);
 
   try {
@@ -109,11 +123,24 @@ const writeI18nOptions = (custom) => {
 };
 
 /**
- * Clean/resets the routes mapping cached to disk
+ * @returns {GatsbyI18n.Routes}
  */
-const cleanI18nRoutes = () => {
-  fs.rmdirSync(routesPath, { recursive: true });
-  fs.mkdirSync(routesPath);
+const getI18nRoutes = () => {
+  const routesPath = getRoutesPath();
+  try {
+    return require(routesPath);
+  } catch (e) {
+    logger("error", `Failed to read file ${routesPath}`);
+  }
+};
+
+
+/**
+ * Write the routes mapping cached to disk
+ */
+const writeI18nRoutes = (data = {}) => {
+  const routesPath = getRoutesPath();
+  fs.writeFileSync(routesPath, JSON.stringify(data), "utf-8");
 };
 
 /**
@@ -126,11 +153,18 @@ const cleanI18nRoutes = () => {
  * @param {string} locale
  * @param {string} url
  */
-const registerI18nRouteUrl = (routeId, locale, url) => {
-  fs.writeFileSync(
-    path.join(routesPath, `${routeId.replace(/\//g, "_")}--${locale}.json`),
-    JSON.stringify({ url })
-  );
+const writeI18nRouteUrl = (routeId, locale, url) => {
+  const routesPath = getRoutesPath();
+  /** @type {Record<string, Record<string, string>>} */
+  let routesMap = {};
+
+  try {
+    routesMap = require(routesPath);
+    routesMap[locale] = routesMap[locale] || {};
+    routesMap[locale][normaliseRouteId(routeId)] = url;
+  } catch(e) {}
+  
+  fs.writeFileSync(routesPath, JSON.stringify(routesMap));
 };
 
 /**
@@ -204,6 +238,7 @@ const ensureLocalisedMessagesFiles = ({ locales }, options) => {
 const getI18nContext = (locale, additional = {}) => {
   const i18n = getI18nConfig();
   const { locales, defaultLocale, hideDefaultLocaleInUrl } = i18n;
+  const routes = getI18nRoutes();
   let options = getI18nOptions();
 
   locale = locale || defaultLocale;
@@ -216,6 +251,7 @@ const getI18nContext = (locale, additional = {}) => {
       currentLocale: locale,
       hideDefaultLocaleInUrl,
       messages,
+      routes: routes[locale] || {},
       ...additional,
     },
   };
@@ -365,12 +401,14 @@ const relocaliseUrl = (i18n, locale, url) => {
 };
 
 module.exports = {
-  ensureI18nConfig,
+  setCachePath,
   getI18nConfig,
+  ensureI18nConfig,
   getI18nOptions,
   writeI18nOptions,
-  cleanI18nRoutes,
-  registerI18nRouteUrl,
+  getI18nRoutes,
+  writeI18nRoutes,
+  writeI18nRouteUrl,
   ensureLocalisedMessagesFiles,
   getI18nContext,
   extractFromFilePath,

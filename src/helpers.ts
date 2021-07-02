@@ -37,7 +37,7 @@ export const formatUrlPath = (i18n: GatsbyI18n.I18n, urlPath) => {
  * Get the localised destination URL based on the given `routeId`
  *
  * Normalising here allows us to write links such as `"pages/about"` instead of
- * `"/pages/about/"` and still match the route file in the `/.routes/` folder
+ * `"/pages/about/"` and still match the route id
  * (whose name which corresponds to the Markdown/File node relative path).
  *
  * @param {string} [locale] It fallbacks to the currentLocale set on i18n page context
@@ -46,17 +46,7 @@ export const formatUrlPath = (i18n: GatsbyI18n.I18n, urlPath) => {
 export const getRouteUrl = (i18n: GatsbyI18n.I18n, routeId: string, locale?: string): string => {
   locale = locale || i18n.currentLocale;
   routeId = normaliseRouteId(routeId);
-  let localisedTo = "";
-  
-  try {
-    const data = require(`../.routes/${routeId.replace(/\//g, "_")}--${locale}.json`)
-    if (data) localisedTo = data.url;
-  } catch(e) {
-  }
-
-  if (typeof window === "undefined") {
-    return localisedTo;
-  }
+  const localisedTo = i18n.routes[routeId] || "";
 
   return `${localisedTo}${window.location.search}`;
 };

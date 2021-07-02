@@ -2,25 +2,30 @@
 
 const { normaliseUrlPath, shouldCreateLocalisedPage } = require("../utils");
 const {
+  setCachePath,
   writeI18nOptions,
   ensureI18nConfig,
   ensureLocalisedMessagesFiles,
   getI18nConfig,
-  cleanI18nRoutes,
+  writeI18nRoutes,
 } = require("../utils/internal");
 const { getOptions } = require("../utils/options");
 
-const onPreBootstrap = ({ store, actions }, customOptions) => {
+/**
+ * @type {import("gatsby").GatsbyNode["onPreBootstrap"]}
+ */
+const onPreBootstrap = ({ store, actions, cache }, customOptions) => {
   const { program } = store.getState();
   const options = getOptions(customOptions);
 
+  setCachePath(program.directory);
   writeI18nOptions(options);
   ensureI18nConfig(program.directory);
+  writeI18nRoutes({});
 
   const i18n = getI18nConfig();
 
   ensureLocalisedMessagesFiles(i18n, options);
-  cleanI18nRoutes();
 
   const { createRedirect } = actions;
 

@@ -6,8 +6,20 @@ const {
   getI18nContext,
   getI18nConfig,
   relocaliseUrl,
-  registerI18nRouteUrl,
+  writeI18nRoutes,
 } = require("../utils/internal");
+
+/**
+ * @typedef {object} I18nRoutNode
+ * @property {string} routeId
+ * @property {Record<string, I18nRoutNodeFieldLocale>} fields
+ * 
+ * @typedef {object} I18nRoutNodeFieldLocale
+ * @property {string} fields.nodeId
+ * @property {string} fields.locale
+ * @property {string} fields.url
+ * @property {string} fields.component
+ */
 
 const createPages = async ({ graphql, actions }, pluginOptions) => {
   const { createPage } = actions;
@@ -38,14 +50,15 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   // get baseUrl to construct alternates SEO friendly links, remove trailing
   // slash as routes urls will always have it
   baseUrl = baseUrl.replace(/\/+$/, "");
-  const routeNodes = result.data.allI18NRoute.nodes;
-  const routes = {};
+  const routesNodes = result.data.allI18NRoute.nodes;
+  const routesAll = {};
+  const routesKnown = {};
 
   // Pass 1: register all markdown and file routes that will become pages
-  routeNodes.forEach((node) => {
+  routesNodes.forEach((/** @type {I18nRoutNode} */node) => {
     const { routeId, fields: localesData } = node;
     const availableLocalesData = [];
-    routes[routeId] = {};
+    routesAll[routeId] = {};
 
     // each fields key represent a locale, we do this in the `onCreateNode`
     // because we cannot extend an already created field hence we just create a
@@ -57,14 +70,17 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
       // with the `untranslatedComponent` if set
       if (localeData) {
         availableLocalesData.push(localeData);
-        routes[routeId][locale] = localeData;
+        routesAll[routeId][locale] = localeData;
+
+        routesKnown[locale] = routesKnown[locale] || {};
+        routesKnown[locale][routeId] = localeData.url;
       }
     }
 
     // if an `untranslatedComponent` option is set and the translated versions
     // are less then the configured set of locales add some untranslated SEO
     // friendly pages
-    const availableLocales = Object.keys(routes[routeId]);
+    const availableLocales = Object.keys(routesAll[routeId]);
     if (
       untranslatedComponent &&
       availableLocales.length < i18n.locales.length
@@ -79,8 +95,8 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
         // otherwise the first available localised url, otherwise just use the
         // `routeId` which is also a valid url slug
         let urlToRelocalise = routeId;
-        const defaultRoute = routes[routeId][i18n.defaultLocale];
-        const firstAvailableRoute = routes[routeId][availableLocales[0]];
+        const defaultRoute = routesAll[routeId][i18n.defaultLocale];
+        const firstAvailableRoute = routesAll[routeId][availableLocales[0]];
         if (defaultRoute && defaultRoute.url) {
           urlToRelocalise = defaultRoute.url;
         } else if (firstAvailableRoute && firstAvailableRoute.url) {
@@ -89,7 +105,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
         const url = relocaliseUrl(i18n, locale, urlToRelocalise);
         const translatedIn = availableLocales.map((locale) => ({
           locale,
-          url: routes[routeId][locale].url,
+          url: routesAll[routeId][locale].url,
         }));
         const missingLocaleData = {
           nodeId: null, // there is no `id` here, no node "tight" to this page
@@ -104,15 +120,21 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
           robots: "noindex,nofollow",
         };
 
-        routes[routeId][locale] = missingLocaleData;
+        routesAll[routeId][locale] = missingLocaleData;
       });
     }
   });
 
+  // register on cache for dinamically localised links
+  // write localised context to cache so that it can be used by projects to
+  // create additional i18n pages within their gatsby-node `createPages`
+  writeI18nRoutes(routesKnown);
+  
+
   // Pass 2: now actually create the pages, the ones tight to File nodes will be
   // deleted from the standard createStatefulPages lifecycle in `onCreatePage`
-  for (const routeId in routes) {
-    const route = routes[routeId];
+  for (const routeId in routesAll) {
+    const route = routesAll[routeId];
     const alternates = Object.keys(route).map((locale) => ({
       locale,
       url: route[locale].url,
@@ -126,9 +148,6 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
       if (debug) {
         logger("info", `(createPages) create page for url: ${url}`);
       }
-
-      // register on cache for dinamically localised links
-      registerI18nRouteUrl(routeId, locale, url);
 
       // create page with right URLs
       createPage({

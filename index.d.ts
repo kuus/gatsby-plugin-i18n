@@ -37,21 +37,19 @@ declare namespace GatsbyI18n {
     hideDefaultLocaleInUrl: boolean;
   };
 
-  /** The `key` is the `locale` */
-  export type Route = { [key: string]: string };
-  // export type RoutesMap = object;
-  
   /** The `key` is the `routeId` */
-  export type RoutesMap = { [key: string]: Route };
-  // export type RoutesMap = { [key: string]: { [key: string]: string } };
-  // export type RoutesMap = object;
+  export type Route = Record<string, string>;
+  
+  /** The `key` is the `locale` */
+  export type Routes = Record<string, Route>;
 
   export type I18n = {
     locales: string[];
     defaultLocale: string;
     currentLocale: string;
     hideDefaultLocaleInUrl: boolean;
-    messages: { [key: string]: string };
+    messages: Record<string, string>;
+    routes: Record<string, string>;
     alternates: {
       locale: string;
       url: string;
