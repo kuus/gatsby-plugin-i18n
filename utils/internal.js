@@ -21,11 +21,9 @@ let cachePath;
  */
 let configPath;
 
-const getOptionsPath = () =>
-  path.join(cachePath, "options.json");
+const getOptionsPath = () => path.join(cachePath, "options.json");
 
-const getRoutesPath = () =>
-  path.join(cachePath, "routes.json");
+const getRoutesPath = () => path.join(cachePath, "routes.json");
 
 /**
  * Set custom cache path simply in the standard Gatsby's `.cache` folder of
