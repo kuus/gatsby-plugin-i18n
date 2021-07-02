@@ -47,8 +47,12 @@ export const getRouteUrl = (i18n: GatsbyI18n.I18n, routeId: string, locale?: str
   locale = locale || i18n.currentLocale;
   routeId = normaliseRouteId(routeId);
   const localisedTo = i18n.routes[routeId] || "";
+  
+  if (typeof window !== "undefined") {
+    return `${localisedTo}${window.location.search}`;
+  }
 
-  return `${localisedTo}${window.location.search}`;
+  return localisedTo;
 };
 
 /**
