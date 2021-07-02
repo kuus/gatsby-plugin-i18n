@@ -2,7 +2,11 @@
 
 const { getI18nConfig } = require("../utils/internal");
 
-const createSchemaCustomization = ({ actions, schema, createContentDigest }) => {
+const createSchemaCustomization = ({
+  actions,
+  schema,
+  createContentDigest,
+}) => {
   const { createFieldExtension, createTypes } = actions;
   const i18n = getI18nConfig();
 
@@ -40,8 +44,8 @@ const createSchemaCustomization = ({ actions, schema, createContentDigest }) => 
     }
 
     type I18nRouteFields {
-      ${i18n.locales.map(locale => {
-        return `${locale}: I18nRouteFieldsLocale`
+      ${i18n.locales.map((locale) => {
+        return `${locale}: I18nRouteFieldsLocale`;
       })}
     }
 

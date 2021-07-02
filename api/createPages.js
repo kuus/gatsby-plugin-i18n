@@ -13,7 +13,7 @@ const {
  * @typedef {object} I18nRoutNode
  * @property {string} routeId
  * @property {Record<string, I18nRoutNodeFieldLocale>} fields
- * 
+ *
  * @typedef {object} I18nRoutNodeFieldLocale
  * @property {string} fields.nodeId
  * @property {string} fields.locale
@@ -55,7 +55,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   const routesKnown = {};
 
   // Pass 1: register all markdown and file routes that will become pages
-  routesNodes.forEach((/** @type {I18nRoutNode} */node) => {
+  routesNodes.forEach((/** @type {I18nRoutNode} */ node) => {
     const { routeId, fields: localesData } = node;
     const availableLocalesData = [];
     routesAll[routeId] = {};
@@ -129,7 +129,6 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
   // write localised context to cache so that it can be used by projects to
   // create additional i18n pages within their gatsby-node `createPages`
   writeI18nRoutes(routesKnown);
-  
 
   // Pass 2: now actually create the pages, the ones tight to File nodes will be
   // deleted from the standard createStatefulPages lifecycle in `onCreatePage`

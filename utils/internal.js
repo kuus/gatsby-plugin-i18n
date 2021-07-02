@@ -21,14 +21,16 @@ let cachePath;
  */
 let configPath;
 
-const getOptionsPath = () => path.join(cachePath, "gatsby-plugin-i18n-options.json");
+const getOptionsPath = () =>
+  path.join(cachePath, "options.json");
 
-const getRoutesPath = () => path.join(cachePath, "gatsby-plugin-i18n-routes.json");
+const getRoutesPath = () =>
+  path.join(cachePath, "routes.json");
 
 /**
  * Set custom cache path simply in the standard Gatsby's `.cache` folder of
  * the current project
- * 
+ *
  * @param {string} programDirectory Value of Gatsby's `program.directory`
  */
 const setCachePath = (programDirectory) => {
@@ -36,7 +38,7 @@ const setCachePath = (programDirectory) => {
   if (!fs.existsSync(cachePath)) {
     fs.mkdirSync(cachePath);
   }
-}
+};
 
 /**
  *
@@ -72,7 +74,7 @@ const getI18nConfig = () => {
  *
  * @param {string} baseDir
  */
- const ensureI18nConfig = (baseDir) => {
+const ensureI18nConfig = (baseDir) => {
   const { debug, configPath: _configPath } = getI18nOptions();
 
   configPath = path.join(baseDir, _configPath);
@@ -111,7 +113,7 @@ const getI18nOptions = () => {
  *
  * @param {Partial<GatsbyI18n.Options>} custom
  */
- const writeI18nOptions = (custom) => {
+const writeI18nOptions = (custom) => {
   const optionsPath = getOptionsPath();
   const data = getOptions(custom);
 
@@ -133,7 +135,6 @@ const getI18nRoutes = () => {
     logger("error", `Failed to read file ${routesPath}`);
   }
 };
-
 
 /**
  * Write the routes mapping cached to disk
@@ -162,8 +163,8 @@ const writeI18nRouteUrl = (routeId, locale, url) => {
     routesMap = require(routesPath);
     routesMap[locale] = routesMap[locale] || {};
     routesMap[locale][normaliseRouteId(routeId)] = url;
-  } catch(e) {}
-  
+  } catch (e) {}
+
   fs.writeFileSync(routesPath, JSON.stringify(routesMap));
 };
 
