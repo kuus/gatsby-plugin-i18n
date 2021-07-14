@@ -170,8 +170,8 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     const route = routesAll[routeId];
     const alternates = Object.keys(route.locales).map((locale) => ({
       locale,
-      url: route[locale].url,
-      fullUrl: baseUrl + route[locale].url,
+      url: route.locales[locale].url,
+      fullUrl: baseUrl + route.locales[locale].url,
     }));
 
     for (const locale in route.locales) {
