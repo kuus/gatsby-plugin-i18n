@@ -20,7 +20,7 @@ const {
  * @property {string} locale
  * @property {string} url
  * @property {string} component
- * 
+ *
  * @typedef {{
  *  [key: string]: {
  *    context: object;
@@ -36,7 +36,7 @@ const {
  *    }
  *  }
  * }} I18nRoutesAll
- * 
+ *
  * @typedef {{
  *  [locale: string]: {
  *    [routeId: string]: string;
@@ -88,7 +88,7 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
     const availableLocalesData = [];
     routesAll[routeId] = {
       context,
-      locales: {}
+      locales: {},
     };
 
     // each fields key represent a locale, we do this in the `onCreateNode`
@@ -127,7 +127,8 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
         // `routeId` which is also a valid url slug
         let urlToRelocalise = routeId;
         const defaultRoute = routesAll[routeId].locales[i18n.defaultLocale];
-        const firstAvailableRoute = routesAll[routeId].locales[availableLocales[0]];
+        const firstAvailableRoute =
+          routesAll[routeId].locales[availableLocales[0]];
         if (defaultRoute && defaultRoute.url) {
           urlToRelocalise = defaultRoute.url;
         } else if (firstAvailableRoute && firstAvailableRoute.url) {

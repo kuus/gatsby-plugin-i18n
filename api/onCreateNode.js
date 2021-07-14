@@ -87,15 +87,15 @@ const getMarkdownRouteComponent = (
 
 /**
  * @typedef {import("gatsby").Node} NodeOriginal
- * 
+ *
  * @typedef {{
  *   id: string;
  *   internal: {
  *     type: "File";
  *   };
-  *  absolutePath: string;
- * }} FileNode 
- * 
+ *  absolutePath: string;
+ * }} FileNode
+ *
  * @typedef {{
  *   id: string;
  *   internal: {
@@ -109,8 +109,8 @@ const getMarkdownRouteComponent = (
  * }} MarkdownNode
  */
 
- /**
- * @param {import("gatsby").CreateNodeArgs<FileNode | MarkdownNode>} args 
+/**
+ * @param {import("gatsby").CreateNodeArgs<FileNode | MarkdownNode>} args
  */
 const onCreateNode = async (
   {
@@ -132,9 +132,9 @@ const onCreateNode = async (
   // normalisedExcludedPaths
 
   if (node.internal.type === "File") {
-    nodePath = /** @type {FileNode} */(node).absolutePath;
+    nodePath = /** @type {FileNode} */ (node).absolutePath;
   } else {
-    nodePath = /** @type {MarkdownNode} */(node).fileAbsolutePath;
+    nodePath = /** @type {MarkdownNode} */ (node).fileAbsolutePath;
   }
 
   const isFile = node.internal.type === "File";
@@ -145,7 +145,7 @@ const onCreateNode = async (
   const nodeData = {
     ...extractFromFilePath(nodePath),
     urls: [],
-    context: {}
+    context: {},
   };
   let localesManagedByNode = [];
   let isRouteNode;
@@ -186,14 +186,15 @@ const onCreateNode = async (
   // missing the page will be considered untranslated
   else if (isMarkdown) {
     const customSlugs = {};
-    const { frontmatter, fileAbsolutePath } = /** @type {MarkdownNode} */(node);
+    const { frontmatter, fileAbsolutePath } = /** @type {MarkdownNode} */ (
+      node
+    );
 
     // we get here only if the Markdown node file specify the locale in its file
     // name, e.g. `/my-page/index.en.md`
     if (nodeData.locale) {
       // slug overriding
       if (frontmatter) {
-
         // not every markdown necessarily need to render into a page route, just
         // those that specify a template name or a slug
         if (frontmatter && frontmatter.template) {
@@ -208,7 +209,8 @@ const onCreateNode = async (
           );
         }
         if (frontmatter[options.frontmatterKeyForIdentifier]) {
-          nodeData.context.identifier = frontmatter[options.frontmatterKeyForIdentifier];
+          nodeData.context.identifier =
+            frontmatter[options.frontmatterKeyForIdentifier];
         }
       }
 
@@ -314,7 +316,10 @@ const onCreateNode = async (
     const routeNodeId = createNodeId(
       `gatsby-plugin-i18n-route-${nodeData.routeId}`
     );
-    const routeNodeData = { routeId: nodeData.routeId, context: nodeData.context };
+    const routeNodeData = {
+      routeId: nodeData.routeId,
+      context: nodeData.context,
+    };
 
     // create special route node if it does not exists yet
     if (!getNode(routeNodeId)) {
