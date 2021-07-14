@@ -85,6 +85,33 @@ const getMarkdownRouteComponent = (
   return component;
 };
 
+/**
+ * @typedef {import("gatsby").Node} NodeOriginal
+ * 
+ * @typedef {{
+ *   id: string;
+ *   internal: {
+ *     type: "File";
+ *   };
+  *  absolutePath: string;
+ * }} FileNode 
+ * 
+ * @typedef {{
+ *   id: string;
+ *   internal: {
+ *     type: "MarkdownRemark" | "Mdx";
+ *   };
+ *   fileAbsolutePath: string;
+ *   frontmatter?: {
+ *     template?: string;
+ *     identifier?: string;
+ *   }
+ * }} MarkdownNode
+ */
+
+ /**
+ * @param {import("gatsby").CreateNodeArgs<FileNode | MarkdownNode>} args 
+ */
 const onCreateNode = async (
   {
     node,
@@ -99,19 +126,26 @@ const onCreateNode = async (
   const { createNodeField } = actions;
   const options = getOptions(pluginOptions);
   const i18n = getI18nConfig();
-
+  let nodePath = "";
   // TODO: respect this option:
   // const normalisedExcludedPaths = excludePaths.map(normaliseUrlPath);
   // normalisedExcludedPaths
 
+  if (node.internal.type === "File") {
+    nodePath = /** @type {FileNode} */(node).absolutePath;
+  } else {
+    nodePath = /** @type {MarkdownNode} */(node).fileAbsolutePath;
+  }
+
   const isFile = node.internal.type === "File";
   const isMarkdown = !isFile; // ["MarkdownRemark", "Mdx"].includes(node.internal.type);
   // file nodes have absolutePath, markdown nodes have nodePath
-  const nodePath = isFile ? node.absolutePath : node.fileAbsolutePath;
+  // const nodePath = isFile ? node.absolutePath : node.fileAbsolutePath;
   const nodeId = node.id;
   const nodeData = {
     ...extractFromFilePath(nodePath),
     urls: [],
+    context: {}
   };
   let localesManagedByNode = [];
   let isRouteNode;
@@ -152,24 +186,29 @@ const onCreateNode = async (
   // missing the page will be considered untranslated
   else if (isMarkdown) {
     const customSlugs = {};
+    const { frontmatter, fileAbsolutePath } = /** @type {MarkdownNode} */(node);
 
     // we get here only if the Markdown node file specify the locale in its file
     // name, e.g. `/my-page/index.en.md`
     if (nodeData.locale) {
       // slug overriding
-      if (node.frontmatter) {
+      if (frontmatter) {
+
         // not every markdown necessarily need to render into a page route, just
         // those that specify a template name or a slug
-        if (node.frontmatter && node.frontmatter.template) {
+        if (frontmatter && frontmatter.template) {
           isRouteNode = true;
         }
         // with a special frontmatter key localised urls can be overriden in each
         // single markdown file
-        if (node.frontmatter[options.frontmatterKeyForLocalisedSlug]) {
+        if (frontmatter[options.frontmatterKeyForLocalisedSlug]) {
           isRouteNode = true;
           customSlugs[nodeData.locale] = normaliseUrlPath(
-            node.frontmatter[options.frontmatterKeyForLocalisedSlug]
+            frontmatter[options.frontmatterKeyForLocalisedSlug]
           );
+        }
+        if (frontmatter[options.frontmatterKeyForIdentifier]) {
+          nodeData.context.identifier = frontmatter[options.frontmatterKeyForIdentifier];
         }
       }
 
@@ -189,23 +228,23 @@ const onCreateNode = async (
       //   template: collection-file
       //   title: Privacy
       // ---
-      if (node.frontmatter) {
-        localesManagedByNode = Object.keys(node.frontmatter).filter((key) =>
+      if (frontmatter) {
+        localesManagedByNode = Object.keys(frontmatter).filter((key) =>
           i18n.locales.includes(key)
         );
         shouldQuit = true;
 
         // slug overriding
         localesManagedByNode.forEach((locale) => {
-          // if (node.frontmatter[locale].template) {
+          // if (frontmatter[locale].template) {
           //   isRouteNode = true;
           // }
           // if (
-          //   node.frontmatter[locale][options.frontmatterKeyForLocalisedSlug]
+          //   frontmatter[locale][options.frontmatterKeyForLocalisedSlug]
           // ) {
           //   isRouteNode = true;
           //   customSlugs[locale] = normaliseUrlPath(
-          //     node.frontmatter[locale][options.frontmatterKeyForLocalisedSlug]
+          //     frontmatter[locale][options.frontmatterKeyForLocalisedSlug]
           //   );
           // }
 
@@ -214,8 +253,7 @@ const onCreateNode = async (
           );
 
           const yaml = require("js-yaml");
-          const { body: fakedBody, ...fakedFrontmatter } =
-            node.frontmatter[locale];
+          const { body: fakedBody, ...fakedFrontmatter } = frontmatter[locale];
           let fakeMdContent = "---\n";
           fakeMdContent += yaml.dump(fakedFrontmatter);
           fakeMdContent += "---\n\n";
@@ -244,8 +282,8 @@ const onCreateNode = async (
       );
       const component = getMarkdownRouteComponent(
         options,
-        node.fileAbsolutePath,
-        node.frontmatter[locale] || node.frontmatter
+        fileAbsolutePath,
+        frontmatter[locale] || frontmatter
       );
 
       // add urls to register for this same node
@@ -276,11 +314,11 @@ const onCreateNode = async (
     const routeNodeId = createNodeId(
       `gatsby-plugin-i18n-route-${nodeData.routeId}`
     );
-    const routeNodeData = { routeId: nodeData.routeId };
+    const routeNodeData = { routeId: nodeData.routeId, context: nodeData.context };
 
     // create special route node if it does not exists yet
     if (!getNode(routeNodeId)) {
-      await createNode({
+      createNode({
         ...routeNodeData,
         id: routeNodeId,
         internal: {

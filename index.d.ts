@@ -1,4 +1,4 @@
-export * from "./index";
+// export * from "./index";
 
 declare namespace GatsbyI18n {
 
@@ -24,6 +24,8 @@ declare namespace GatsbyI18n {
     useMdx?: boolean;
     /** @default "slug" */
     frontmatterKeyForLocalisedSlug?: string;
+    /** @default "identifier" */
+    frontmatterKeyForIdentifier?: string;
     // netlify/server related options:
     /** @default true */
     hasSplatRedirects?: boolean;

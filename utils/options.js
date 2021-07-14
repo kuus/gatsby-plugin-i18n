@@ -16,6 +16,7 @@ const defaultOptions = {
   untranslatedComponent: null,
   useMdx: true,
   frontmatterKeyForLocalisedSlug: "slug",
+  frontmatterKeyForIdentifier: "identifier",
   // netlify/server related options:
   hasSplatRedirects: true,
 };
