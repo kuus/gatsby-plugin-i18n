@@ -57,7 +57,9 @@ const createPages = async ({ graphql, actions }, pluginOptions) => {
       allI18NRoute {
         nodes {
           routeId
-          context
+          context {
+            identifier
+          }
           fields {
             ${i18n.locales.map(
               (locale) => `
