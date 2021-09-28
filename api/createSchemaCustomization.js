@@ -36,11 +36,15 @@ const createSchemaCustomization = ({
   `);
 
   createTypes(`
+    type I18nRouteContext {
+      identifier: String!
+    }
+
     type I18nRouteFieldsLocale {
-      locale: String!
-      url: String!
       component: String!
+      locale: String!
       nodeId: String!
+      url: String!
     }
 
     type I18nRouteFields {
@@ -50,8 +54,9 @@ const createSchemaCustomization = ({
     }
 
     type I18nRoute implements Node {
-      routeId: String!
+      context: I18nRouteContext
       fields: I18nRouteFields
+      routeId: String!
     }
   `);
 
