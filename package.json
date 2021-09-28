@@ -1,6 +1,6 @@
 {
   "name": "@kuus/gatsby-plugin-i18n",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "",
   "author": "kuus <kunderikuus@gmail.com> (http://kunderikuus.net)",
   "license": "MIT",
@@ -20,22 +20,22 @@
   },
   "main": "index.js",
   "dependencies": {
-    "@formatjs/icu-messageformat-parser": "^2.0.7",
-    "@formatjs/intl-pluralrules": "^4.0.28",
-    "@formatjs/intl-relativetimeformat": "^9.1.7",
-    "comment-parser": "^1.1.5",
+    "@formatjs/icu-messageformat-parser": "^2.0.12",
+    "@formatjs/intl-pluralrules": "^4.1.4",
+    "@formatjs/intl-relativetimeformat": "^9.3.1",
+    "comment-parser": "^1.2.4",
     "intl": "^1.2.5",
     "js-yaml": "^4.1.0",
-    "react-intl": "^5.20.4"
+    "react-intl": "^5.20.12"
   },
   "peerDependencies": {
     "@types/react-helmet": "^6.1.2",
     "gatsby": "^3.x.x",
     "react": "^17.0.x",
     "react-helmet": "^6.1.0",
-    "webpack": "^5.44.0"
+    "webpack": "^5.54.0"
   },
   "devDependencies": {
-    "prettier": "^2.3.2"
+    "prettier": "^2.4.1"
   }
 }
